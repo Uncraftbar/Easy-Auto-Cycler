@@ -1,27 +1,41 @@
+# Easy Auto Cycler
 
-Installation information
-=======
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_easy-auto-cycler_downloads.svg?badge_style=flat)](https://www.curseforge.com/minecraft/mc-mods/placeholder)
+[![GitHub license](https://img.shields.io/github/license/Uncraftbar/Easy-Villagers-Autotrade)](LICENSE)
 
-This template repository can be directly cloned to get you started with a new
-mod. Simply create a new repository cloned from this one, by following the
-instructions at [github](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+A simple client-side mod for Minecraft NeoForge that adds automation to the 'Cycle Trades' button from the [Easy Villagers](https://www.curseforge.com/minecraft/mc-mods/easy-villagers) mod, specifically targeting Librarian enchanted book trades.
 
-Once you have your clone, simply open the repository in the IDE of your choice. The usual recommendation for an IDE is either IntelliJ IDEA or Eclipse.
+Set your desired enchantment and price, then press a keybind to automatically re-roll trades until you find what you're looking for!
 
-> **Note**: For Eclipse, use tasks in `Launch Group` instead of ones founds in `Java Application`. A preparation task must run before launching the game. NeoGradle uses launch groups to do these subsequently.
+## Features
 
-If at any point you are missing libraries in your IDE, or you've run into problems you can
-run `gradlew --refresh-dependencies` to refresh the local cache. `gradlew clean` to reset everything 
-{this does not affect your code} and then start the process again.
+*   **Automated Trade Cycling:** Automatically clicks the Easy Villagers 'Cycle Trades' button repeatedly.
+*   **Targeted Search:** Configure the specific enchanted book (enchantment, level, max emerald cost) you want using in-game commands.
+*   **Auto-Stop:** Cycling automatically stops when the desired trade is found.
+*   **Manual Toggle:** Start and stop cycling easily with a configurable keybind (Default: `K`).
+*   **Lightweight & Client-Side:** Doesn't affect server performance or require installation on the server.
 
-Mapping Names:
-============
-By default, the MDK is configured to use the official mapping names from Mojang for methods and fields 
-in the Minecraft codebase. These names are covered by a specific license. All modders should be aware of this
-license. For the latest license text, refer to the mapping file itself, or the reference copy here:
-https://github.com/NeoForged/NeoForm/blob/main/Mojang.md
+## Requirements
 
-Additional Resources: 
-==========
-Community Documentation: https://docs.neoforged.net/  
-NeoForged Discord: https://discord.neoforged.net/
+*   **Minecraft Neoforge:** 1.21.1
+*   **[Easy Villagers Mod](https://www.curseforge.com/minecraft/mc-mods/easy-villagers):** Version 1.1.27 or later for MC 1.21.1
+
+
+## Usage
+
+1.  **Configure Target Trade:**
+    *   Use the `/autocycle setbook <enchantment_id> <level> <max_emeralds>` command.
+    *   `<enchantment_id>`: The resource location ID (e.g., `mending`, `minecraft:unbreaking`, `mod_id:enchant_id`).
+    *   `<level>`: The desired enchantment level (e.g., `1` for Mending, `4` for Protection IV).
+    *   `<max_emeralds>`: The maximum number of emeralds you are willing to pay (1-64).
+    *   **Example:** `/autocycle setbook minecraft:mending 1 20` (Find Mending for 20 emeralds or less)
+2.  **Check Status:** Use `/autocycle status` to see the currently configured target.
+3.  **Clear Target:** Use `/autocycle clear` to remove the target.
+4.  **Start/Stop Cycling:**
+    *   Open the trade GUI of a Librarian villager that is eligible for trade cycling (the Easy Villagers cycle button must be active).
+    *   Press the **Toggle Auto Trade Cycling** keybind (Default: `K`). Check Minecraft controls options to view or change the keybind under the "Easy Auto Cycler" category.
+    *   Press the keybind again to stop cycling manually.
+
+## Dependencies
+
+This mod **REQUIRES** the [Easy Villagers Mod](https://www.curseforge.com/minecraft/mc-mods/easy-villagers) to be installed, as it directly interacts with the button added by that mod.

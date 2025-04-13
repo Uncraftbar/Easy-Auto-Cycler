@@ -2,8 +2,8 @@ package com.uncraftbar.easyautocycler;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.InputEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.client.event.InputEvent;
 import org.lwjgl.glfw.GLFW;
 
 public class InputHandler {

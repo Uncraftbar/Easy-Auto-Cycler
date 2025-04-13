@@ -1,6 +1,6 @@
 # Easy Auto Cycler
 
-[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_easy-auto-cycler_downloads.svg?badge_style=flat)](https://www.curseforge.com/minecraft/mc-mods/placeholder)
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_easy-auto-cycler_downloads.svg?badge_style=flat)](https://curseforge.com/minecraft/mc-mods/easy-auto-cycler)
 [![GitHub license](https://img.shields.io/github/license/Uncraftbar/Easy-Villagers-Autotrade)](LICENSE)
 
 A simple client-side mod for Minecraft NeoForge that adds automation to the 'Cycle Trades' button from the [Easy Villagers](https://www.curseforge.com/minecraft/mc-mods/easy-villagers) mod, specifically targeting Librarian enchanted book trades.

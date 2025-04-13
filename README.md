@@ -12,7 +12,7 @@ Set your desired enchantment and price, then press a keybind to automatically re
 *   **Automated Trade Cycling:** Automatically clicks the Easy Villagers 'Cycle Trades' button repeatedly.
 *   **Targeted Search:** Configure the specific enchanted book (enchantment, level, max emerald cost) you want using in-game commands.
 *   **Auto-Stop:** Cycling automatically stops when the desired trade is found.
-*   **Manual Toggle:** Start and stop cycling easily with a configurable keybind (Default: `K`).
+*   **Manual Toggle:** Start and stop cycling easily with a configurable keybind (Default: `R`).
 *   **Lightweight & Client-Side:** Doesn't affect server performance or require installation on the server.
 
 ## Requirements
@@ -33,7 +33,7 @@ Set your desired enchantment and price, then press a keybind to automatically re
 3.  **Clear Target:** Use `/autocycle clear` to remove the target.
 4.  **Start/Stop Cycling:**
     *   Open the trade GUI of a Librarian villager that is eligible for trade cycling (the Easy Villagers cycle button must be active).
-    *   Press the **Toggle Auto Trade Cycling** keybind (Default: `K`). Check Minecraft controls options to view or change the keybind under the "Easy Auto Cycler" category.
+    *   Press the **Toggle Auto Trade Cycling** keybind (Default: `R`). Check Minecraft controls options to view or change the keybind under the "Easy Auto Cycler" category.
     *   Press the keybind again to stop cycling manually.
 
 ## Dependencies

@@ -1,7 +1,6 @@
 # Easy Auto Cycler
-
-[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_easy-auto-cycler_downloads.svg?badge_style=flat)](https://www.curseforge.com/minecraft/mc-mods/placeholder)
-[![GitHub license](https://img.shields.io/github/license/Uncraftbar/Easy-Villagers-Autotrade)](LICENSE)
+[![CurseForge Downloads](https://cf.way2muchnoise.eu/full_1242344_downloads.svg?badge_style=flat)](https://curseforge.com/minecraft/mc-mods/easy-auto-cycler)
+[![GitHub license](https://img.shields.io/github/license/Uncraftbar/Easy-Auto-Cycler-1.20.1-Forge)](LICENSE)
 
 A simple client-side mod for Minecraft NeoForge that adds automation to the 'Cycle Trades' button from the [Easy Villagers](https://www.curseforge.com/minecraft/mc-mods/easy-villagers) mod, specifically targeting Librarian enchanted book trades.
 
@@ -12,7 +11,7 @@ Set your desired enchantment and price, then press a keybind to automatically re
 *   **Automated Trade Cycling:** Automatically clicks the Easy Villagers 'Cycle Trades' button repeatedly.
 *   **Targeted Search:** Configure the specific enchanted book (enchantment, level, max emerald cost) you want using in-game commands.
 *   **Auto-Stop:** Cycling automatically stops when the desired trade is found.
-*   **Manual Toggle:** Start and stop cycling easily with a configurable keybind (Default: `K`).
+*   **Manual Toggle:** Start and stop cycling easily with a configurable keybind (Default: `R`).
 *   **Lightweight & Client-Side:** Doesn't affect server performance or require installation on the server.
 
 ## Requirements
@@ -33,7 +32,7 @@ Set your desired enchantment and price, then press a keybind to automatically re
 3.  **Clear Target:** Use `/autocycle clear` to remove the target.
 4.  **Start/Stop Cycling:**
     *   Open the trade GUI of a Librarian villager that is eligible for trade cycling (the Easy Villagers cycle button must be active).
-    *   Press the **Toggle Auto Trade Cycling** keybind (Default: `K`). Check Minecraft controls options to view or change the keybind under the "Easy Auto Cycler" category.
+    *   Press the **Toggle Auto Trade Cycling** keybind (Default: `R`). Check Minecraft controls options to view or change the keybind under the "Easy Auto Cycler" category.
     *   Press the keybind again to stop cycling manually.
 
 ## Dependencies

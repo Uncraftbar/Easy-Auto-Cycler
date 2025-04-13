@@ -13,13 +13,12 @@ public class Keybindings {
 
     public static KeyMapping toggleAutoCycleKey;
 
-    // Called via the mod event bus listener in the main class
     public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
         toggleAutoCycleKey = new KeyMapping(
                 KEY_TOGGLE_AUTO_CYCLE,
-                KeyConflictContext.GUI, // Only active when a GUI is open
+                KeyConflictContext.GUI,
                 InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_K, // Default key K - change as desired
+                GLFW.GLFW_KEY_R,
                 KEY_CATEGORY_AUTO_CYCLE
         );
         event.register(toggleAutoCycleKey);

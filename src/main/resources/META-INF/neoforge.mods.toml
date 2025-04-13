@@ -85,6 +85,15 @@ description='''${mod_description}'''
     ordering="NONE"
     side="BOTH"
 
+[[dependencies.${mod_id}]] # Replace 'your_mod_id' with your actual mod ID
+    modId="easy_villagers"
+    mandatory=true
+    # Find the appropriate version range for Easy Villagers for MC 1.21.1
+    versionRange="1.1.27" # Example range, adjust as needed!
+    ordering="AFTER"
+    side="CLIENT" # Your mod is client-side
+
+
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
 # stop your mod loading on the server for example.

@@ -1,0 +1,12 @@
+{
+  "key.category.easyautocycler": "Easy Auto Trader",
+  "key.easyautocycler.toggle_auto_cycle": "Toggle Auto Trade Cycling",
+  "chat.easyautocycler.started": "Started auto trade cycling.",
+  "chat.easyautocycler.stopped.reason": "Stopped auto trade cycling: %s",
+  "chat.easyautocycler.found": "Target trade found!",
+  "chat.easyautocycler.notfound": "Could not find target trade.",
+  "chat.easyautocycler.error.noscreen": "Cannot start: Villager trade screen not open.",
+  "chat.easyautocycler.error.nobutton": "Cannot start: Cycle button not found (Easy Villagers installed?).",
+  "chat.easyautocycler.error.noconfig": "Cannot start: No target trade configured."
+  // Add more translations as needed
+}

@@ -7,7 +7,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import org.slf4j.Logger;
 
 
@@ -22,7 +22,7 @@ public class EasyAutoCyclerMod {
         modEventBus.addListener(this::clientSetup);
         modEventBus.addListener(Keybindings::registerKeyMappings);
 
-        NeoForge.EVENT_BUS.addListener(this::registerCommands);
+        NeoForge.EVENT_BUS.addListener(this::registerClientCommands);
 
         LOGGER.info("EasyAutoCyclerMod loaded!");
     }
@@ -38,8 +38,9 @@ public class EasyAutoCyclerMod {
         LOGGER.info("Client event handlers registered.");
     }
 
-    public void registerCommands(RegisterCommandsEvent event) {
-        CommandSetTrade.register(event.getDispatcher(), event.getBuildContext());
-        LOGGER.info("Registered commands.");
+    public void registerClientCommands(RegisterClientCommandsEvent event) { // Note the event type change
+        // CommandBuildContext is typically NOT provided or needed for client commands
+        CommandSetTrade.register(event.getDispatcher()); // Pass only the dispatcher
+        LOGGER.info("Registered client commands.");
     }
 }

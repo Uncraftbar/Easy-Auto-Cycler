@@ -2,14 +2,17 @@ package com.uncraftbar.easyautocycler;
 
 import com.mojang.logging.LogUtils;
 import com.uncraftbar.easyautocycler.command.CommandSetTrade;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
-import org.slf4j.Logger;
+// Import Forge event buses and FML event bus
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus; // Still needed
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent; // For client setup
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext; // Get mod event bus this way
 
+import org.slf4j.Logger;
 
 @Mod(EasyAutoCyclerMod.MODID)
 public class EasyAutoCyclerMod {
@@ -17,30 +20,47 @@ public class EasyAutoCyclerMod {
     public static final String MODID = "easyautocycler";
     public static final Logger LOGGER = LogUtils.getLogger();
 
-    public EasyAutoCyclerMod(IEventBus modEventBus) {
+    // CHANGE: Make constructor have NO arguments
+    public EasyAutoCyclerMod() {
+        // Get the Mod specific event bus
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        // Register lifecycle methods to the mod event bus
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
-        modEventBus.addListener(Keybindings::registerKeyMappings);
+        // Register keybinding event listener to the mod event bus
+        modEventBus.addListener(this::registerKeybindings); // Moved registration here
 
-        NeoForge.EVENT_BUS.addListener(this::registerClientCommands);
+        // Register client command listener to the FORGE bus (not mod bus)
+        MinecraftForge.EVENT_BUS.addListener(this::registerClientCommands);
 
         LOGGER.info("EasyAutoCyclerMod loaded!");
     }
 
+    // commonSetup - Register things needed on both sides (if any)
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("Common setup");
+        // If you had common event handlers, register them to MinecraftForge.EVENT_BUS here
+        // MinecraftForge.EVENT_BUS.register(new CommonEventHandler());
     }
 
+    // clientSetup - Register client-only things
     private void clientSetup(final FMLClientSetupEvent event) {
         LOGGER.info("Client setup");
-        NeoForge.EVENT_BUS.register(new ClientEventHandler());
-        NeoForge.EVENT_BUS.register(new InputHandler());
+        // Register client-only event handlers to the FORGE bus
+        MinecraftForge.EVENT_BUS.register(new ClientEventHandler());
+        MinecraftForge.EVENT_BUS.register(new InputHandler());
         LOGGER.info("Client event handlers registered.");
     }
 
-    public void registerClientCommands(RegisterClientCommandsEvent event) { // Note the event type change
-        // CommandBuildContext is typically NOT provided or needed for client commands
-        CommandSetTrade.register(event.getDispatcher()); // Pass only the dispatcher
+    // Keybinding registration - now called by listener setup in constructor
+    public void registerKeybindings(RegisterKeyMappingsEvent event) { // Method needs correct event type
+        Keybindings.registerKeyMappings(event); // Delegate to the Keybindings class
+    }
+
+    // Client command registration - called by listener setup in constructor
+    public void registerClientCommands(RegisterClientCommandsEvent event) {
+        CommandSetTrade.register(event.getDispatcher());
         LOGGER.info("Registered client commands.");
     }
 }

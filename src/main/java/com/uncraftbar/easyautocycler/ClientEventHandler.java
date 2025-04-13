@@ -3,9 +3,10 @@ package com.uncraftbar.easyautocycler;
 import de.maxhenkel.easyvillagers.gui.CycleTradesButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.ScreenEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraftforge.event.TickEvent.ClientTickEvent;
+import net.minecraftforge.event.TickEvent;
 
 public class ClientEventHandler {
 
@@ -14,6 +15,7 @@ public class ClientEventHandler {
         Screen screen = event.getScreen();
         if (screen instanceof MerchantScreen merchantScreen) {
             EasyAutoCyclerMod.LOGGER.trace("MerchantScreen opened. Searching for CycleTradesButton...");
+
             boolean found = false;
             for (net.minecraft.client.gui.components.Renderable renderable : event.getScreen().renderables) {
                 if (renderable instanceof CycleTradesButton cycleButton) {
@@ -27,6 +29,8 @@ public class ClientEventHandler {
                 EasyAutoCyclerMod.LOGGER.debug("CycleTradesButton not found on MerchantScreen.");
                 AutomationManager.INSTANCE.clearTargetButton();
             }
+
+
         }
     }
 
@@ -39,9 +43,11 @@ public class ClientEventHandler {
     }
 
     @SubscribeEvent
-    public void onClientTickPost(ClientTickEvent.Post event) {
-        if (AutomationManager.INSTANCE.isRunning()) {
-            AutomationManager.INSTANCE.clientTick();
+    public void onClientTick(TickEvent.ClientTickEvent event) { // Changed parameter
+        if (event.phase == TickEvent.Phase.END) { // Add phase check
+            if (AutomationManager.INSTANCE.isRunning()) {
+                AutomationManager.INSTANCE.clientTick();
+            }
         }
     }
 }

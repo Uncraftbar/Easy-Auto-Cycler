@@ -14,6 +14,9 @@ import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.core.Holder;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -92,8 +95,7 @@ public class AutomationManager {
         Screen currentScreen = Minecraft.getInstance().screen;
         String screenName = (currentScreen != null) ? currentScreen.getClass().getName() : "null";
 
-        if (!(currentScreen instanceof MerchantScreen)) { // Check against the variable we just logged
-            sendMessageToPlayer(Component.literal("Error: Villager trade screen not open."));
+        if (!(currentScreen instanceof MerchantScreen)) {
             EasyAutoCyclerMod.LOGGER.warn("Cannot start: Screen check failed. Screen was: {}", screenName);
             return;
         }
@@ -151,8 +153,17 @@ public class AutomationManager {
         if (targetEnchantment != null && checkTrades(offers)) {
             EasyAutoCyclerMod.LOGGER.info("Target trade FOUND!");
             sendMessageToPlayer(Component.literal("§aTarget trade found!"));
+            try {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.getSoundManager() != null) {
+                    mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING, 1.0F));
+                }
+            } catch (Exception e) {
+                EasyAutoCyclerMod.LOGGER.error("Failed to play 'trade found' sound effect", e);
+            }
             stop("Target trade found");
             return;
+
         }
 
         if (!targetButton.visible || !targetButton.active) {

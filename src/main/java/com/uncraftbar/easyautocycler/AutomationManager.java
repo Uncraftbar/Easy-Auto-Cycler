@@ -1,46 +1,40 @@
-package com.uncraftbar.easyautocycler; // Use your actual package name
+package com.uncraftbar.easyautocycler;
 
-// Imports for Minecraft and other libraries (should be mostly the same)
-import de.maxhenkel.easyvillagers.gui.CycleTradesButton;
+// Keep necessary imports
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
-import net.minecraft.client.gui.screens.Screen; // Was missing before, needed for logging/checks
-import net.minecraft.client.resources.sounds.SimpleSoundInstance; // For sound
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents; // For sound events
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper; // Import for NBT enchantment access
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 
-// Standard Java imports
+// Import Easy Villagers classes needed for packet sending & canCycle check
+import de.maxhenkel.easyvillagers.Main; // Needed for network channel
+import de.maxhenkel.easyvillagers.gui.CycleTradesButton; // Needed for canCycle check
+import de.maxhenkel.easyvillagers.net.MessageCycleTrades; // Needed for the packet
+
 import javax.annotation.Nullable;
-import java.util.Map; // Import Map for enchantment iteration
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-// Removed imports specific to 1.21.1 Data Components:
-// import net.minecraft.core.component.DataComponents;
-// import net.minecraft.core.Holder;
-// import net.minecraft.world.item.enchantment.ItemEnchantments;
-
-
 public class AutomationManager {
-
 
     public static final AutomationManager INSTANCE = new AutomationManager();
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
-    private CycleTradesButton targetButton = null;
+    // REMOVED: private CycleTradesButton targetButton = null;
     private int delayTicks = 0;
     private int currentCycles = 0;
     private static final int MAX_CYCLES_SAFETY = 3000;
-    // You might want to adjust this for 1.20.1 performance if needed
-    private static final int CLICK_DELAY = 2; // Default speed adjustment
+    private static final int CLICK_DELAY = 2; // Keep speed adjustment
 
-    // Configuration Fields (remain the same)
     @Nullable private Enchantment targetEnchantment = null;
     @Nullable private ResourceLocation targetEnchantmentId = null;
     private int maxEmeraldCost = 64;
@@ -48,30 +42,19 @@ public class AutomationManager {
 
     private AutomationManager() {}
 
-    // Getters (remain the same)
+    // Getters (remove getTargetButton)
     public boolean isRunning() { return isRunning.get(); }
     @Nullable public Enchantment getTargetEnchantment() { return targetEnchantment; }
     @Nullable public ResourceLocation getTargetEnchantmentId() { return targetEnchantmentId; }
     public int getMaxEmeraldCost() { return maxEmeraldCost; }
     public int getTargetLevel() { return targetLevel; }
-    @Nullable public CycleTradesButton getTargetButton() { return this.targetButton; }
+    // REMOVED: @Nullable public CycleTradesButton getTargetButton() { return this.targetButton; }
 
+    // Internal State Management (remove button methods)
+    // REMOVED: public void setTargetButton(CycleTradesButton button) { ... }
+    // REMOVED: public void clearTargetButton() { ... }
 
-    // Internal State Management (remain the same)
-    public void setTargetButton(CycleTradesButton button) {
-        this.targetButton = button;
-        EasyAutoCyclerMod.LOGGER.trace("Target button set: {}", button != null);
-    }
-
-    public void clearTargetButton() {
-        this.targetButton = null;
-        if (isRunning.get()) {
-            stop("Button lost during cycle");
-        }
-    }
-
-    // Public Controls (remain the same)
-    // configureTarget signature already updated previously to remove book cost
+    // Public Controls (configureTarget, clearTarget, toggle - remain the same)
     public void configureTarget(Enchantment enchantment, ResourceLocation enchantmentId, int level, int emeraldCost) {
         this.targetEnchantment = enchantment;
         this.targetEnchantmentId = enchantmentId;
@@ -99,7 +82,7 @@ public class AutomationManager {
         }
     }
 
-    // Start method (remains the same, logging included)
+    // Start method - Remove button check
     private void start() {
         Screen currentScreen = Minecraft.getInstance().screen;
         String screenName = (currentScreen != null) ? currentScreen.getClass().getName() : "null";
@@ -111,12 +94,7 @@ public class AutomationManager {
             return;
         }
 
-        if (targetButton == null) {
-            sendMessageToPlayer(Component.literal("Error: Cycle button not found (Easy Villagers issue?)."));
-            EasyAutoCyclerMod.LOGGER.warn("Cannot start: Button not found.");
-            return;
-        }
-
+        // REMOVED: Button check is no longer needed here. The check will be done in clientTick before sending packet.
 
         if (targetEnchantment == null) {
             sendMessageToPlayer(Component.literal("Warning: No target trade configured. Cycling will not stop automatically."));
@@ -126,7 +104,7 @@ public class AutomationManager {
         if (isRunning.compareAndSet(false, true)) {
             EasyAutoCyclerMod.LOGGER.info("Starting villager trade cycling.");
             sendMessageToPlayer(Component.literal("Auto-cycling started. Press keybind again to stop."));
-            this.delayTicks = 0;
+            this.delayTicks = 0; // Start check immediately
             this.currentCycles = 0;
         }
     }
@@ -139,139 +117,112 @@ public class AutomationManager {
         }
     }
 
-    // Core Loop Logic (clientTick) - Sound playing logic included
+    // Core Loop Logic (clientTick) - Rewritten to send packet
     public void clientTick() {
         if (!isRunning.get()) return;
 
-
-        if (!(Minecraft.getInstance().screen instanceof MerchantScreen screen) || targetButton == null) {
-            stop("Screen closed or button lost");
+        // Ensure we are still in the correct screen
+        if (!(Minecraft.getInstance().screen instanceof MerchantScreen screen)) {
+            stop("Screen closed");
             return;
         }
 
-
-
+        // Cycle limit check
         currentCycles++;
         if (currentCycles > MAX_CYCLES_SAFETY) {
             stop("Max cycles safety limit reached");
             return;
         }
 
+        // Delay check (wait before attempting next cycle)
         if (delayTicks > 0) {
             delayTicks--;
             return;
         }
 
+        // --- Check Trades BEFORE Cycling ---
         MerchantOffers offers = screen.getMenu().getOffers();
-        if (targetEnchantment != null && checkTrades(offers)) { // checkTrades logic below is updated
+        if (targetEnchantment != null && checkTrades(offers)) {
             EasyAutoCyclerMod.LOGGER.info("Target trade FOUND!");
             sendMessageToPlayer(Component.literal("§aTarget trade found!"));
-
+            // Play sound effect
             try {
                 Minecraft mc = Minecraft.getInstance();
-                if (mc.getSoundManager() != null) {
+                if (mc != null && mc.getSoundManager() != null) {
                     mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING, 1.0F));
                 }
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to play 'trade found' sound effect", e);
             }
-
             stop("Target trade found");
             return;
         }
 
-
-        if (!targetButton.visible || !targetButton.active) {
-            EasyAutoCyclerMod.LOGGER.trace("Cycle button not active, waiting...");
-            return;
+        // --- Attempt to Cycle via Packet ---
+        // Check if cycling is possible using Easy Villagers' own logic
+        if (CycleTradesButton.canCycle(screen.getMenu())) {
+            try {
+                EasyAutoCyclerMod.LOGGER.trace("Conditions met, sending MessageCycleTrades packet (Cycle {})", currentCycles);
+                // Send the packet using Easy Villagers' channel and message class
+                Main.SIMPLE_CHANNEL.sendToServer(new MessageCycleTrades());
+                // Set delay for next cycle attempt
+                delayTicks = CLICK_DELAY;
+            } catch(Exception e) {
+                EasyAutoCyclerMod.LOGGER.error("Failed to send MessageCycleTrades packet!", e);
+                stop("Network error"); // Stop if packet sending fails
+            }
+        } else {
+            // Log that cycling isn't possible right now
+            EasyAutoCyclerMod.LOGGER.trace("CycleTradesButton.canCycle() returned false, waiting...");
+            // Don't set delay, just wait for next tick check
         }
-
-        EasyAutoCyclerMod.LOGGER.trace("Clicking Cycle Trades button (Cycle {})", currentCycles);
-        targetButton.onPress();
-        delayTicks = CLICK_DELAY;
     }
 
 
-
-    // --- Trade Checking Logic (checkTrades) - UPDATED FOR 1.20.1 NBT ---
-    // TODO: Refactor checkTrades and configuration for general item trades.
+    // --- Trade Checking Logic (checkTrades) - Using 1.20.1 NBT (Unchanged from previous version) ---
     private boolean checkTrades(MerchantOffers offers) {
-        if (targetEnchantment == null) return false; // No target set
+        if (targetEnchantment == null) return false;
 
         for (MerchantOffer offer : offers) {
             ItemStack resultStack = offer.getResult();
+            if (!resultStack.is(Items.ENCHANTED_BOOK)) continue;
+            if (offer.isOutOfStock()) continue;
 
-            // Is the result an enchanted book item?
-            if (!resultStack.is(Items.ENCHANTED_BOOK)) {
-                continue; // Skip if not a book
-            }
-
-            // Is the offer currently available?
-            if (offer.isOutOfStock()) {
-                continue; // Skip disabled trades
-            }
-
-            // Check ingredients (1 Book + Emeralds <= max)
             ItemStack costA = offer.getCostA();
             ItemStack costB = offer.getCostB();
-            final int requiredBookCost = 1; // Hardcoded book cost
+            final int requiredBookCost = 1;
 
             if (costA.is(Items.EMERALD) && costA.getCount() <= this.maxEmeraldCost) {
-                // If A is emeralds within price, B must be exactly 1 book
-                if (!costB.is(Items.BOOK) || costB.getCount() != requiredBookCost) {
-                    continue; // Cost B is wrong
-                }
+                if (!costB.is(Items.BOOK) || costB.getCount() != requiredBookCost) continue;
             } else if (costB.is(Items.EMERALD) && costB.getCount() <= this.maxEmeraldCost) {
-                // If B is emeralds within price, A must be exactly 1 book
-                if (!costA.is(Items.BOOK) || costA.getCount() != requiredBookCost) {
-                    continue; // Cost A is wrong
-                }
+                if (!costA.is(Items.BOOK) || costA.getCount() != requiredBookCost) continue;
             } else {
-                // Neither ingredient combination matched (Emeralds + 1 Book)
                 continue;
             }
 
-            // --- NBT Based Enchantment Check ---
-            // Use EnchantmentHelper to get enchantments from the ItemStack's NBT data
             Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(resultStack);
-
-            // Skip if the map is empty (no enchantments found)
-            if (enchantments.isEmpty()) {
-                continue;
-            }
+            if (enchantments.isEmpty()) continue;
 
             boolean foundMatchingEnchantment = false;
-            // Iterate through the Map of Enchantment -> Level
             for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
-                Enchantment ench = entry.getKey(); // The enchantment object
-                int level = entry.getValue();     // The enchantment level
-
-                // Compare the enchantment object and level directly
+                Enchantment ench = entry.getKey();
+                int level = entry.getValue();
                 if (ench.equals(this.targetEnchantment) && level == this.targetLevel) {
                     foundMatchingEnchantment = true;
-                    break; // Found the target enchantment, no need to check others on this book
+                    break;
                 }
             }
-            // --- End NBT Check ---
 
-            // If we found the matching enchantment in the loop above, this offer is the one!
-            if (foundMatchingEnchantment) {
-                return true;
-            }
+            if (foundMatchingEnchantment) return true;
         }
-
-        return false; // No matching trade found after checking all offers
+        return false;
     }
 
-
-
-    // --- Utility (sendMessageToPlayer) - Remains the same ---
+    // --- Utility (sendMessageToPlayer) ---
     private void sendMessageToPlayer(Component message) {
         Minecraft mc = Minecraft.getInstance();
         if (mc != null && mc.player != null) {
             mc.player.sendSystemMessage(message);
         }
     }
-
-
 }

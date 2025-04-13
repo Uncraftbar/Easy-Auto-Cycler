@@ -1,50 +1,49 @@
 package com.uncraftbar.easyautocycler;
 
-import de.maxhenkel.easyvillagers.gui.CycleTradesButton;
+// Remove CycleTradesButton import if no longer needed anywhere else
+// import de.maxhenkel.easyvillagers.gui.CycleTradesButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.client.event.ScreenEvent;
-import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent;
+
+// Imports for logging/casting removed if not needed
+// import net.minecraft.client.gui.components.Renderable;
+// import net.minecraft.client.gui.components.events.GuiEventListener;
+// import java.lang.reflect.Field;
+
 
 public class ClientEventHandler {
 
+    // REMOVED: private static final String TARGET_BUTTON_CLASS_NAME = ...;
+
     @SubscribeEvent
     public void onScreenInitPost(ScreenEvent.Init.Post event) {
-        Screen screen = event.getScreen();
-        if (screen instanceof MerchantScreen merchantScreen) {
-            EasyAutoCyclerMod.LOGGER.trace("MerchantScreen opened. Searching for CycleTradesButton...");
-
-            boolean found = false;
-            for (net.minecraft.client.gui.components.Renderable renderable : event.getScreen().renderables) {
-                if (renderable instanceof CycleTradesButton cycleButton) {
-                    EasyAutoCyclerMod.LOGGER.trace("Found CycleTradesButton!");
-                    AutomationManager.INSTANCE.setTargetButton(cycleButton);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                EasyAutoCyclerMod.LOGGER.debug("CycleTradesButton not found on MerchantScreen.");
-                AutomationManager.INSTANCE.clearTargetButton();
-            }
-
-
+        // We no longer need to search for the button when the screen opens.
+        // We can keep this log message for debugging if desired.
+        if (event.getScreen() instanceof MerchantScreen) {
+            EasyAutoCyclerMod.LOGGER.debug("MerchantScreen opened.");
         }
     }
 
     @SubscribeEvent
     public void onScreenClose(ScreenEvent.Closing event) {
+        // We still might want to stop cycling if the screen closes.
+        // The AutomationManager.clientTick() already handles this,
+        // but clearing target reference isn't needed.
+        // We could call stop() directly here if needed, but redundant.
         if (event.getScreen() instanceof MerchantScreen) {
-            EasyAutoCyclerMod.LOGGER.trace("MerchantScreen closing.");
-            AutomationManager.INSTANCE.clearTargetButton();
+            EasyAutoCyclerMod.LOGGER.debug("MerchantScreen closing.");
+            // If AutomationManager is running, its tick check will stop it.
+            // No need to call AutomationManager.INSTANCE.clearTargetButton();
         }
     }
 
+    // Tick Event (using Forge 1.20.1 structure) - No change needed here
     @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent event) { // Changed parameter
-        if (event.phase == TickEvent.Phase.END) { // Add phase check
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
             if (AutomationManager.INSTANCE.isRunning()) {
                 AutomationManager.INSTANCE.clientTick();
             }

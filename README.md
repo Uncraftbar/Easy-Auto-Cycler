@@ -17,7 +17,7 @@ Set your desired enchantment and price, then press a keybind to automatically re
 ## Requirements
 
 *   **Minecraft Forge:** 1.20.1
-*   **[Easy Villagers Mod](https://www.curseforge.com/minecraft/mc-mods/easy-villagers):** Version 1.1.27 or later for MC 1.20.1
+*   **[Easy Villagers Mod](https://www.curseforge.com/minecraft/mc-mods/easy-villagers):** MC 1.20.1
 
 
 ## Usage

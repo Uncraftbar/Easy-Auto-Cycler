@@ -1,25 +1,25 @@
-package com.uncraftbar.easyautocycler; // Your package
+package com.uncraftbar.easyautocycler;
 
 // Minecraft & NeoForge imports
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.core.component.DataComponents; // Keep for 1.21.1
-import net.minecraft.core.Holder; // Keep for 1.21.1
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.ItemEnchantments; // Keep for 1.21.1
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 
 // Easy Villagers imports
-import de.maxhenkel.easyvillagers.gui.CycleTradesButton; // For canCycle check
-import de.maxhenkel.easyvillagers.net.MessageCycleTrades; // For the packet
+import de.maxhenkel.easyvillagers.gui.CycleTradesButton;
+import de.maxhenkel.easyvillagers.net.MessageCycleTrades;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 // Java imports
@@ -31,7 +31,6 @@ public class AutomationManager {
     public static final AutomationManager INSTANCE = new AutomationManager();
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
-    // REMOVED: private CycleTradesButton targetButton = null;
     private int delayTicks = 0;
     private int currentCycles = 0;
     private static final int MAX_CYCLES_SAFETY = 3000;
@@ -44,19 +43,12 @@ public class AutomationManager {
 
     private AutomationManager() {}
 
-    // Getters (remove getTargetButton)
     public boolean isRunning() { return isRunning.get(); }
     @Nullable public Enchantment getTargetEnchantment() { return targetEnchantment; }
     @Nullable public ResourceLocation getTargetEnchantmentId() { return targetEnchantmentId; }
     public int getMaxEmeraldCost() { return maxEmeraldCost; }
     public int getTargetLevel() { return targetLevel; }
-    // REMOVED: @Nullable public CycleTradesButton getTargetButton() { ... }
 
-    // Internal State Management (remove button methods)
-    // REMOVED: public void setTargetButton(CycleTradesButton button) { ... }
-    // REMOVED: public void clearTargetButton() { ... }
-
-    // Public Controls (configureTarget, clearTarget, toggle - remain the same)
     public void configureTarget(Enchantment enchantment, ResourceLocation enchantmentId, int level, int emeraldCost) {
         this.targetEnchantment = enchantment;
         this.targetEnchantmentId = enchantmentId;
@@ -84,7 +76,6 @@ public class AutomationManager {
         }
     }
 
-    // Start method - Remove button check
     private void start() {
         Screen currentScreen = Minecraft.getInstance().screen;
         String screenName = (currentScreen != null) ? currentScreen.getClass().getName() : "null";
@@ -96,7 +87,6 @@ public class AutomationManager {
             return;
         }
 
-        // REMOVED: Button check is no longer needed.
 
         if (targetEnchantment == null) {
             sendMessageToPlayer(Component.literal("Warning: No target trade configured. Cycling will not stop automatically."));
@@ -111,7 +101,6 @@ public class AutomationManager {
         }
     }
 
-    // Stop method (remains the same)
     public void stop(String reason) {
         if (isRunning.compareAndSet(true, false)) {
             EasyAutoCyclerMod.LOGGER.info("Stopping villager trade cycling. Reason: {}", reason);
@@ -155,11 +144,9 @@ public class AutomationManager {
             return;
         }
 
-        // Attempt to Cycle via Packet
         if (CycleTradesButton.canCycle(screen.getMenu())) {
             try {
                 EasyAutoCyclerMod.LOGGER.trace("Conditions met, sending MessageCycleTrades packet (Cycle {})", currentCycles);
-                // Assumes Main.SIMPLE_CHANNEL and MessageCycleTrades exist and work similarly in EV 8.x
                 PacketDistributor.sendToServer(new MessageCycleTrades());
                 delayTicks = CLICK_DELAY;
             } catch(Exception e) {
@@ -171,7 +158,7 @@ public class AutomationManager {
         }
     }
 
-    // --- Trade Checking Logic (checkTrades) - Using 1.21.1 Data Components ---
+    // --- Trade Checking Logic
     private boolean checkTrades(MerchantOffers offers) {
         if (targetEnchantment == null) return false;
 
@@ -192,15 +179,14 @@ public class AutomationManager {
                 continue;
             }
 
-            // Use Data Components for 1.21.1
             ItemEnchantments enchantments = resultStack.get(DataComponents.STORED_ENCHANTMENTS);
             if (enchantments == null || enchantments.isEmpty()) continue; // Check if null or empty
 
             boolean foundMatchingEnchantment = false;
-            // Iterate through Holders
+
             for (Holder<Enchantment> enchHolder : enchantments.keySet()) {
                 Enchantment ench = enchHolder.value(); // Get value from Holder
-                // Check level using Holder
+
                 int level = enchantments.getLevel(enchHolder);
                 if (ench.equals(this.targetEnchantment) && level == this.targetLevel) {
                     foundMatchingEnchantment = true;

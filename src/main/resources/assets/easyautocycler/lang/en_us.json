@@ -15,10 +15,6 @@
   "commands.easyautocycler.setbook.success": "Set trade target to %s Level %s (Max %s Emeralds)",
   "commands.easyautocycler.clear.success": "Cleared trade target.",
   "commands.easyautocycler.status.set": "Current target: %s Level %s (Max Emeralds: %s)",
-  "commands.easyautocycler.status.none": "No target trade currently set.",
-  "commands.easyautocycler.setbook.unknown_enchantment": "Unknown enchantment ID: %s",
-  "commands.easyautocycler.setbook.invalid_level": "Invalid level %s for specified enchantment.",
-  "commands.easyautocycler.status.set": "Current target: %s Level %s (Max Emeralds: %s)",
   "commands.easyautocycler.status.none": "No target trade currently set."
 
 

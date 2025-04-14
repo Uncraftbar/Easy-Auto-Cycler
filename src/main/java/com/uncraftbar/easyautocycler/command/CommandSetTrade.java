@@ -70,7 +70,7 @@ public class CommandSetTrade {
         ResourceLocation currentTargetId = AutomationManager.INSTANCE.getTargetEnchantmentId();
         Component message;
         if (currentTargetId != null) {
-            message = Component.translatable("commands.easyautocycler.status.set.simple", // Changed key
+            message = Component.translatable("commands.easyautocycler.status.set", // Changed key
                     currentTargetId.toString(),
                     AutomationManager.INSTANCE.getTargetLevel(),
                     AutomationManager.INSTANCE.getMaxEmeraldCost()

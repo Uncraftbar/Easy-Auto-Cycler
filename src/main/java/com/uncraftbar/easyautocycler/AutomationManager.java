@@ -1,6 +1,6 @@
 package com.uncraftbar.easyautocycler;
 
-// Keep necessary imports
+// Minecraft and Forge Imports
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,10 +15,10 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 
-// Import Easy Villagers classes needed for packet sending & canCycle check
-import de.maxhenkel.easyvillagers.Main; // Needed for network channel
-import de.maxhenkel.easyvillagers.gui.CycleTradesButton; // Needed for canCycle check
-import de.maxhenkel.easyvillagers.net.MessageCycleTrades; // Needed for the packet
+// Import Easy Villagers classes
+import de.maxhenkel.easyvillagers.Main;
+import de.maxhenkel.easyvillagers.gui.CycleTradesButton;
+import de.maxhenkel.easyvillagers.net.MessageCycleTrades;
 
 import javax.annotation.Nullable;
 import java.util.Map;
@@ -29,7 +29,6 @@ public class AutomationManager {
     public static final AutomationManager INSTANCE = new AutomationManager();
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
-    // REMOVED: private CycleTradesButton targetButton = null;
     private int delayTicks = 0;
     private int currentCycles = 0;
     private static final int MAX_CYCLES_SAFETY = 3000;
@@ -42,19 +41,12 @@ public class AutomationManager {
 
     private AutomationManager() {}
 
-    // Getters (remove getTargetButton)
     public boolean isRunning() { return isRunning.get(); }
     @Nullable public Enchantment getTargetEnchantment() { return targetEnchantment; }
     @Nullable public ResourceLocation getTargetEnchantmentId() { return targetEnchantmentId; }
     public int getMaxEmeraldCost() { return maxEmeraldCost; }
     public int getTargetLevel() { return targetLevel; }
-    // REMOVED: @Nullable public CycleTradesButton getTargetButton() { return this.targetButton; }
 
-    // Internal State Management (remove button methods)
-    // REMOVED: public void setTargetButton(CycleTradesButton button) { ... }
-    // REMOVED: public void clearTargetButton() { ... }
-
-    // Public Controls (configureTarget, clearTarget, toggle - remain the same)
     public void configureTarget(Enchantment enchantment, ResourceLocation enchantmentId, int level, int emeraldCost) {
         this.targetEnchantment = enchantment;
         this.targetEnchantmentId = enchantmentId;
@@ -82,7 +74,6 @@ public class AutomationManager {
         }
     }
 
-    // Start method - Remove button check
     private void start() {
         Screen currentScreen = Minecraft.getInstance().screen;
         String screenName = (currentScreen != null) ? currentScreen.getClass().getName() : "null";
@@ -94,7 +85,6 @@ public class AutomationManager {
             return;
         }
 
-        // REMOVED: Button check is no longer needed here. The check will be done in clientTick before sending packet.
 
         if (targetEnchantment == null) {
             sendMessageToPlayer(Component.literal("Warning: No target trade configured. Cycling will not stop automatically."));
@@ -109,7 +99,6 @@ public class AutomationManager {
         }
     }
 
-    // Stop method (remains the same)
     public void stop(String reason) {
         if (isRunning.compareAndSet(true, false)) {
             EasyAutoCyclerMod.LOGGER.info("Stopping villager trade cycling. Reason: {}", reason);
@@ -117,35 +106,30 @@ public class AutomationManager {
         }
     }
 
-    // Core Loop Logic (clientTick) - Rewritten to send packet
+    // Core Loop Logic (clientTick)
     public void clientTick() {
         if (!isRunning.get()) return;
 
-        // Ensure we are still in the correct screen
         if (!(Minecraft.getInstance().screen instanceof MerchantScreen screen)) {
             stop("Screen closed");
             return;
         }
 
-        // Cycle limit check
         currentCycles++;
         if (currentCycles > MAX_CYCLES_SAFETY) {
             stop("Max cycles safety limit reached");
             return;
         }
 
-        // Delay check (wait before attempting next cycle)
         if (delayTicks > 0) {
             delayTicks--;
             return;
         }
 
-        // --- Check Trades BEFORE Cycling ---
         MerchantOffers offers = screen.getMenu().getOffers();
         if (targetEnchantment != null && checkTrades(offers)) {
             EasyAutoCyclerMod.LOGGER.info("Target trade FOUND!");
             sendMessageToPlayer(Component.literal("§aTarget trade found!"));
-            // Play sound effect
             try {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc != null && mc.getSoundManager() != null) {
@@ -158,23 +142,17 @@ public class AutomationManager {
             return;
         }
 
-        // --- Attempt to Cycle via Packet ---
-        // Check if cycling is possible using Easy Villagers' own logic
         if (CycleTradesButton.canCycle(screen.getMenu())) {
             try {
                 EasyAutoCyclerMod.LOGGER.trace("Conditions met, sending MessageCycleTrades packet (Cycle {})", currentCycles);
-                // Send the packet using Easy Villagers' channel and message class
                 Main.SIMPLE_CHANNEL.sendToServer(new MessageCycleTrades());
-                // Set delay for next cycle attempt
                 delayTicks = CLICK_DELAY;
             } catch(Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send MessageCycleTrades packet!", e);
                 stop("Network error"); // Stop if packet sending fails
             }
         } else {
-            // Log that cycling isn't possible right now
             EasyAutoCyclerMod.LOGGER.trace("CycleTradesButton.canCycle() returned false, waiting...");
-            // Don't set delay, just wait for next tick check
         }
     }
 

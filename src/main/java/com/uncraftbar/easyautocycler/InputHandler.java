@@ -2,7 +2,7 @@ package com.uncraftbar.easyautocycler;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraftforge.eventbus.api.SubscribeEvent; // Ensure correct bus API
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.client.event.InputEvent;
 import org.lwjgl.glfw.GLFW;
 
@@ -21,7 +21,6 @@ public class InputHandler {
 
                     EasyAutoCyclerMod.LOGGER.info("--- Toggle Key Pressed (GUI Context Check)! ---");
                     EasyAutoCyclerMod.LOGGER.debug("InputHandler: Screen before toggle() call: {}", currentScreen.getClass().getName());
-                    // REMOVED: Logging about targetButton state
 
                     AutomationManager.INSTANCE.toggle();
                 }

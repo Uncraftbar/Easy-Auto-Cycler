@@ -1,23 +1,28 @@
-package com.uncraftbar.easyautocycler;
+package com.uncraftbar.easyautocycler; // Your package
 
-import de.maxhenkel.easyvillagers.gui.CycleTradesButton;
+// Minecraft & NeoForge imports
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
-import net.minecraft.core.component.DataComponents;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.component.DataComponents; // Keep for 1.21.1
+import net.minecraft.core.Holder; // Keep for 1.21.1
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments; // Keep for 1.21.1
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
-import net.minecraft.core.Holder;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 
+// Easy Villagers imports
+import de.maxhenkel.easyvillagers.gui.CycleTradesButton; // For canCycle check
+import de.maxhenkel.easyvillagers.net.MessageCycleTrades; // For the packet
+import net.neoforged.neoforge.network.PacketDistributor;
+
+// Java imports
 import javax.annotation.Nullable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,50 +31,39 @@ public class AutomationManager {
     public static final AutomationManager INSTANCE = new AutomationManager();
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
-    private CycleTradesButton targetButton = null;
+    // REMOVED: private CycleTradesButton targetButton = null;
     private int delayTicks = 0;
     private int currentCycles = 0;
     private static final int MAX_CYCLES_SAFETY = 3000;
-    private static final int CLICK_DELAY = 2;
+    private static final int CLICK_DELAY = 2; // Keep speed adjustment
 
-    // --- Configuration Fields ---
-    @Nullable
-    private Enchantment targetEnchantment = null;
-    @Nullable // Store the ID alongside the enchantment object
-    private ResourceLocation targetEnchantmentId = null;
+    @Nullable private Enchantment targetEnchantment = null;
+    @Nullable private ResourceLocation targetEnchantmentId = null;
     private int maxEmeraldCost = 64;
     private int targetLevel = 1;
 
     private AutomationManager() {}
 
-    // --- Getters for Status ---
+    // Getters (remove getTargetButton)
     public boolean isRunning() { return isRunning.get(); }
     @Nullable public Enchantment getTargetEnchantment() { return targetEnchantment; }
-    @Nullable public ResourceLocation getTargetEnchantmentId() { return targetEnchantmentId; } // Getter for ID
+    @Nullable public ResourceLocation getTargetEnchantmentId() { return targetEnchantmentId; }
     public int getMaxEmeraldCost() { return maxEmeraldCost; }
     public int getTargetLevel() { return targetLevel; }
+    // REMOVED: @Nullable public CycleTradesButton getTargetButton() { ... }
 
-    // --- Internal State Management ---
-    public void setTargetButton(CycleTradesButton button) {
-        this.targetButton = button;
-        EasyAutoCyclerMod.LOGGER.trace("Target button set: {}", button != null);
-    }
+    // Internal State Management (remove button methods)
+    // REMOVED: public void setTargetButton(CycleTradesButton button) { ... }
+    // REMOVED: public void clearTargetButton() { ... }
 
-    public void clearTargetButton() {
-        this.targetButton = null;
-        if (isRunning.get()) {
-            stop("GUI got closed");
-        }
-    }
-
-    // --- Public Controls ---
+    // Public Controls (configureTarget, clearTarget, toggle - remain the same)
     public void configureTarget(Enchantment enchantment, ResourceLocation enchantmentId, int level, int emeraldCost) {
         this.targetEnchantment = enchantment;
         this.targetEnchantmentId = enchantmentId;
         this.targetLevel = level;
         this.maxEmeraldCost = emeraldCost;
 
-        String message = String.format("Set target: Enchantment=%s, Level=%d, MaxEmeralds=%d",
+        String message = String.format("Set target: Enchantment=%s, Level=%d, MaxEmeralds=%d (Book cost: 1)",
                 enchantmentId.toString(), level, emeraldCost);
         EasyAutoCyclerMod.LOGGER.info(message);
         sendMessageToPlayer(Component.literal(message));
@@ -77,7 +71,7 @@ public class AutomationManager {
 
     public void clearTarget() {
         this.targetEnchantment = null;
-        this.targetEnchantmentId = null; // Clear the ID too
+        this.targetEnchantmentId = null;
         EasyAutoCyclerMod.LOGGER.info("Cleared target trade.");
         sendMessageToPlayer(Component.literal("Cleared target trade. Automation will not stop automatically."));
     }
@@ -90,20 +84,20 @@ public class AutomationManager {
         }
     }
 
-
+    // Start method - Remove button check
     private void start() {
         Screen currentScreen = Minecraft.getInstance().screen;
         String screenName = (currentScreen != null) ? currentScreen.getClass().getName() : "null";
+        EasyAutoCyclerMod.LOGGER.debug("AutomationManager.start(): Checking screen. Current screen is: {}", screenName);
 
         if (!(currentScreen instanceof MerchantScreen)) {
+            sendMessageToPlayer(Component.literal("Error: Villager trade screen not open."));
             EasyAutoCyclerMod.LOGGER.warn("Cannot start: Screen check failed. Screen was: {}", screenName);
             return;
         }
-        if (targetButton == null) {
-            sendMessageToPlayer(Component.literal("Error: Cycle button not found (Easy Villagers issue?)."));
-            EasyAutoCyclerMod.LOGGER.warn("Cannot start: Button not found.");
-            return;
-        }
+
+        // REMOVED: Button check is no longer needed.
+
         if (targetEnchantment == null) {
             sendMessageToPlayer(Component.literal("Warning: No target trade configured. Cycling will not stop automatically."));
             EasyAutoCyclerMod.LOGGER.warn("Starting cycle without target definition.");
@@ -117,11 +111,7 @@ public class AutomationManager {
         }
     }
 
-    @Nullable // Mark it as nullable just in case
-    public CycleTradesButton getTargetButton() {
-        return this.targetButton;
-    }
-
+    // Stop method (remains the same)
     public void stop(String reason) {
         if (isRunning.compareAndSet(true, false)) {
             EasyAutoCyclerMod.LOGGER.info("Stopping villager trade cycling. Reason: {}", reason);
@@ -129,12 +119,12 @@ public class AutomationManager {
         }
     }
 
-    // --- Core Loop Logic (clientTick) ---
+    // Core Loop Logic (clientTick) - Sends packet
     public void clientTick() {
         if (!isRunning.get()) return;
 
-        if (!(Minecraft.getInstance().screen instanceof MerchantScreen screen) || targetButton == null) {
-            stop("Screen closed or button lost");
+        if (!(Minecraft.getInstance().screen instanceof MerchantScreen screen)) {
+            stop("Screen closed");
             return;
         }
 
@@ -150,12 +140,12 @@ public class AutomationManager {
         }
 
         MerchantOffers offers = screen.getMenu().getOffers();
-        if (targetEnchantment != null && checkTrades(offers)) {
+        if (targetEnchantment != null && checkTrades(offers)) { // checkTrades uses 1.21.1 logic below
             EasyAutoCyclerMod.LOGGER.info("Target trade FOUND!");
             sendMessageToPlayer(Component.literal("§aTarget trade found!"));
             try {
                 Minecraft mc = Minecraft.getInstance();
-                if (mc.getSoundManager() != null) {
+                if (mc != null && mc.getSoundManager() != null) {
                     mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING, 1.0F));
                 }
             } catch (Exception e) {
@@ -163,19 +153,25 @@ public class AutomationManager {
             }
             stop("Target trade found");
             return;
-
         }
 
-        if (!targetButton.visible || !targetButton.active) {
-            EasyAutoCyclerMod.LOGGER.trace("Cycle button not active, waiting...");
-            return;
+        // Attempt to Cycle via Packet
+        if (CycleTradesButton.canCycle(screen.getMenu())) {
+            try {
+                EasyAutoCyclerMod.LOGGER.trace("Conditions met, sending MessageCycleTrades packet (Cycle {})", currentCycles);
+                // Assumes Main.SIMPLE_CHANNEL and MessageCycleTrades exist and work similarly in EV 8.x
+                PacketDistributor.sendToServer(new MessageCycleTrades());
+                delayTicks = CLICK_DELAY;
+            } catch(Exception e) {
+                EasyAutoCyclerMod.LOGGER.error("Failed to send MessageCycleTrades packet!", e);
+                stop("Network error");
+            }
+        } else {
+            EasyAutoCyclerMod.LOGGER.trace("CycleTradesButton.canCycle() returned false, waiting...");
         }
-
-        EasyAutoCyclerMod.LOGGER.trace("Clicking Cycle Trades button (Cycle {})", currentCycles);
-        targetButton.onPress();
-        delayTicks = CLICK_DELAY;
     }
 
+    // --- Trade Checking Logic (checkTrades) - Using 1.21.1 Data Components ---
     private boolean checkTrades(MerchantOffers offers) {
         if (targetEnchantment == null) return false;
 
@@ -189,33 +185,26 @@ public class AutomationManager {
             final int requiredBookCost = 1;
 
             if (costA.is(Items.EMERALD) && costA.getCount() <= this.maxEmeraldCost) {
-                // If A is emeralds within price, B must be exactly 1 book
-                if (!costB.is(Items.BOOK) || costB.getCount() != requiredBookCost) { // Check for == 1 book
-                    continue;
-                }
+                if (!costB.is(Items.BOOK) || costB.getCount() != requiredBookCost) continue;
             } else if (costB.is(Items.EMERALD) && costB.getCount() <= this.maxEmeraldCost) {
-                // If B is emeralds within price, A must be exactly 1 book
-                if (!costA.is(Items.BOOK) || costA.getCount() != requiredBookCost) { // Check for == 1 book
-                    continue;
-                }
+                if (!costA.is(Items.BOOK) || costA.getCount() != requiredBookCost) continue;
             } else {
                 continue;
             }
 
+            // Use Data Components for 1.21.1
             ItemEnchantments enchantments = resultStack.get(DataComponents.STORED_ENCHANTMENTS);
-            if (enchantments == null) continue;
+            if (enchantments == null || enchantments.isEmpty()) continue; // Check if null or empty
 
             boolean foundMatchingEnchantment = false;
-
+            // Iterate through Holders
             for (Holder<Enchantment> enchHolder : enchantments.keySet()) {
-                Enchantment ench = enchHolder.value();
-
-                if (ench.equals(this.targetEnchantment)) {
-                    int level = enchantments.getLevel(enchHolder);
-                    if (level == this.targetLevel) {
-                        foundMatchingEnchantment = true;
-                        break;
-                    }
+                Enchantment ench = enchHolder.value(); // Get value from Holder
+                // Check level using Holder
+                int level = enchantments.getLevel(enchHolder);
+                if (ench.equals(this.targetEnchantment) && level == this.targetLevel) {
+                    foundMatchingEnchantment = true;
+                    break;
                 }
             }
 
@@ -224,9 +213,11 @@ public class AutomationManager {
         return false;
     }
 
+    // --- Utility (sendMessageToPlayer) ---
     private void sendMessageToPlayer(Component message) {
-        if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.sendSystemMessage(message);
+        Minecraft mc = Minecraft.getInstance();
+        if (mc != null && mc.player != null) {
+            mc.player.sendSystemMessage(message);
         }
     }
 }

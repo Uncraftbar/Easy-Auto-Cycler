@@ -80,15 +80,14 @@ public class AutomationManager {
         EasyAutoCyclerMod.LOGGER.debug("AutomationManager.start(): Checking screen. Current screen is: {}", screenName);
 
         if (!(currentScreen instanceof MerchantScreen)) {
-            sendMessageToPlayer(Component.literal("Error: Villager trade screen not open."));
-            EasyAutoCyclerMod.LOGGER.warn("Cannot start: Screen check failed. Screen was: {}", screenName);
+            EasyAutoCyclerMod.LOGGER.trace("Cannot start: Screen check failed. Screen was: {}", screenName);
             return;
         }
 
 
         if (targetEnchantment == null) {
             sendMessageToPlayer(Component.literal("Warning: No target trade configured. Cycling will not stop automatically."));
-            EasyAutoCyclerMod.LOGGER.warn("Starting cycle without target definition.");
+            EasyAutoCyclerMod.LOGGER.debug("Starting cycle without target definition.");
         }
 
         if (isRunning.compareAndSet(false, true)) {

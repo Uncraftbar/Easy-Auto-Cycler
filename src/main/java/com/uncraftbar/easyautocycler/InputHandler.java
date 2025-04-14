@@ -19,8 +19,7 @@ public class InputHandler {
                 if (Keybindings.toggleAutoCycleKey.matches(event.getKey(), event.getScanCode())
                         && event.getAction() == GLFW.GLFW_PRESS) {
 
-                    EasyAutoCyclerMod.LOGGER.info("--- Toggle Key Pressed (GUI Context Check)! ---");
-                    EasyAutoCyclerMod.LOGGER.debug("InputHandler: Screen before toggle() call: {}", currentScreen.getClass().getName());
+                    EasyAutoCyclerMod.LOGGER.trace("InputHandler: Screen before toggle() call: {}", currentScreen.getClass().getName());
 
                     AutomationManager.INSTANCE.toggle();
                 }

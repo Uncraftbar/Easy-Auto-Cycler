@@ -28,7 +28,7 @@ description='''${mod_description}'''
 [[dependencies.${mod_id}]]
     modId="easy_villagers"
     mandatory=true
-    versionRange="[1.1.27,)"
+    versionRange="[1.1.15,)"
     ordering="AFTER"
     side="BOTH"
 

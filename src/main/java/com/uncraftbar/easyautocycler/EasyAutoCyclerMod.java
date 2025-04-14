@@ -1,7 +1,6 @@
 package com.uncraftbar.easyautocycler;
 
 import com.mojang.logging.LogUtils;
-import com.uncraftbar.easyautocycler.command.CommandSetTrade;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
@@ -22,7 +21,6 @@ public class EasyAutoCyclerMod {
         modEventBus.addListener(this::clientSetup);
         modEventBus.addListener(Keybindings::registerKeyMappings);
 
-        NeoForge.EVENT_BUS.addListener(this::registerClientCommands);
 
         LOGGER.info("EasyAutoCyclerMod loaded!");
     }
@@ -38,9 +36,5 @@ public class EasyAutoCyclerMod {
         LOGGER.info("Client event handlers registered.");
     }
 
-    public void registerClientCommands(RegisterClientCommandsEvent event) {
 
-        CommandSetTrade.register(event.getDispatcher());
-        LOGGER.info("Registered client commands.");
-    }
 }

@@ -10,12 +10,25 @@
   "chat.easyautocycler.error.nobutton": "Error: Cycle button not found (Easy Villagers issue?).",
   "chat.easyautocycler.error.noconfig": "Warning: No target trade configured. Cycling will not stop automatically.",
 
-  "commands.easyautocycler.setbook.unknown_enchantment": "Unknown enchantment ID: %s",
-  "commands.easyautocycler.setbook.invalid_level": "Invalid level %s for specified enchantment.",
-  "commands.easyautocycler.setbook.success": "Set trade target to %s Level %s (Max %s Emeralds)",
-  "commands.easyautocycler.clear.success": "Cleared trade target.",
-  "commands.easyautocycler.status.set": "Current target: %s Level %s (Max Emeralds: %s)",
-  "commands.easyautocycler.status.none": "No target trade currently set."
+
+  "key.easyautocycler.open_config": "Open Auto Cycler Config",
+  "gui.easyautocycler.config.title": "Easy Auto Cycler Configuration",
+
+  "gui.easyautocycler.config.enchantment_id": "Enchantment ID (e.g. minecraft:mending)",
+  "gui.easyautocycler.config.level": "Level",
+  "gui.easyautocycler.config.price": "Max Emeralds",
+  "gui.easyautocycler.config.save": "Save",
+  "gui.easyautocycler.config.clear": "Clear Target",
+  "gui.easyautocycler.config.error.invalid_id": "Invalid Resource Location: %s",
+  "gui.easyautocycler.config.error.invalid_level": "Invalid Level: %s",
+  "gui.easyautocycler.config.error.invalid_price": "Invalid Price (1-64): %s",
+  "gui.easyautocycler.config.error.level_too_high": "Level %s too high (Max: %s)",
+  "gui.easyautocycler.config.error.validation_failed": "Error: %s",
+  "gui.easyautocycler.config.success.saved": "Saved target: %s Level %s (Max %s Emeralds)",
+  "gui.easyautocycler.config.success.cleared": "Target cleared.",
+
+  "gui.easyautocycler.button.config.tooltip": "Configure Auto Cycler",
+  "gui.easyautocycler.button.toggle.tooltip": "Toggle Auto Cycling"
 
 
 }

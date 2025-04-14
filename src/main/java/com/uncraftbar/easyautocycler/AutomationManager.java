@@ -77,7 +77,7 @@ public class AutomationManager {
     private void start() {
         Screen currentScreen = Minecraft.getInstance().screen;
         String screenName = (currentScreen != null) ? currentScreen.getClass().getName() : "null";
-        EasyAutoCyclerMod.LOGGER.debug("AutomationManager.start(): Checking screen. Current screen is: {}", screenName);
+        EasyAutoCyclerMod.LOGGER.trace("AutomationManager.start(): Checking screen. Current screen is: {}", screenName);
 
         if (!(currentScreen instanceof MerchantScreen)) {
             EasyAutoCyclerMod.LOGGER.trace("Cannot start: Screen check failed. Screen was: {}", screenName);
@@ -91,7 +91,7 @@ public class AutomationManager {
         }
 
         if (isRunning.compareAndSet(false, true)) {
-            EasyAutoCyclerMod.LOGGER.info("Starting villager trade cycling.");
+            EasyAutoCyclerMod.LOGGER.debug("Starting villager trade cycling.");
             sendMessageToPlayer(Component.literal("Auto-cycling started. Press keybind again to stop."));
             this.delayTicks = 0; // Start check immediately
             this.currentCycles = 0;
@@ -100,7 +100,7 @@ public class AutomationManager {
 
     public void stop(String reason) {
         if (isRunning.compareAndSet(true, false)) {
-            EasyAutoCyclerMod.LOGGER.info("Stopping villager trade cycling. Reason: {}", reason);
+            EasyAutoCyclerMod.LOGGER.debug("Stopping villager trade cycling. Reason: {}", reason);
             sendMessageToPlayer(Component.literal("Auto-cycling stopped: " + reason));
         }
     }
@@ -127,7 +127,7 @@ public class AutomationManager {
 
         MerchantOffers offers = screen.getMenu().getOffers();
         if (targetEnchantment != null && checkTrades(offers)) {
-            EasyAutoCyclerMod.LOGGER.info("Target trade FOUND!");
+            EasyAutoCyclerMod.LOGGER.debug("Target trade FOUND!");
             sendMessageToPlayer(Component.literal("§aTarget trade found!"));
             try {
                 Minecraft mc = Minecraft.getInstance();

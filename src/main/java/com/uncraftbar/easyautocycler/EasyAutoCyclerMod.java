@@ -38,9 +38,9 @@ public class EasyAutoCyclerMod {
         LOGGER.info("Client event handlers registered.");
     }
 
-    public void registerClientCommands(RegisterClientCommandsEvent event) { // Note the event type change
-        // CommandBuildContext is typically NOT provided or needed for client commands
-        CommandSetTrade.register(event.getDispatcher()); // Pass only the dispatcher
+    public void registerClientCommands(RegisterClientCommandsEvent event) {
+
+        CommandSetTrade.register(event.getDispatcher());
         LOGGER.info("Registered client commands.");
     }
 }

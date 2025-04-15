@@ -21,20 +21,19 @@ Set your desired enchantment and price, then press a keybind to automatically re
 *   **[Easy Villagers Mod](https://www.curseforge.com/minecraft/mc-mods/easy-villagers):** for MC 1.21.1
 
 
-## Usage
+## How to Use:
 
-1.  **Configure Target Trade:**
-    *   Use the `/autocycle setbook <enchantment_id> <level> <max_emeralds>` command.
-    *   `<enchantment_id>`: The resource location ID (e.g., `mending`, `minecraft:unbreaking`, `mod_id:enchant_id`).
-    *   `<level>`: The desired enchantment level (e.g., `1` for Mending, `4` for Protection IV).
-    *   `<max_emeralds>`: The maximum number of emeralds you are willing to pay (1-64).
-    *   **Example:** `/autocycle setbook minecraft:mending 1 20` (Find Mending for 20 emeralds or less)
-2.  **Check Status:** Use `/autocycle status` to see the currently configured target.
-3.  **Clear Target:** Use `/autocycle clear` to remove the target.
-4.  **Start/Stop Cycling:**
-    *   Open the trade GUI of a Librarian villager that is eligible for trade cycling (the Easy Villagers cycle button must be active).
-    *   Press the **Toggle Auto Trade Cycling** keybind (Default: `R`). Check Minecraft controls options to view or change the keybind under the "Easy Auto Cycler" category.
-    *   Press the keybind again to stop cycling manually.
+- Open Config: Press the config keybind (Default: C) or click the "Cog" button added to the Villager Trade Screen.
+- Set Target: In the GUI:
+  - Type the Enchantment ID (e.g., minecraft:mending). Suggestions will appear as you type (Tab accepts).
+  - Enter the desired Level.
+  - Enter the Max Emeralds you'll pay.
+  - Use the Cycle Delay button to choose speed (1-5 ticks, lower is faster).
+  - Click Save.
+- Start/Stop Cycling:
+  - Open a Librarian's trade GUI (make sure the Easy Villagers cycle button would be active).
+  - Press the Toggle Auto Trade Cycling keybind (Default: R) OR click the new "Play" button added to the Villager Trade Screen.
+  - Press the keybind or click the button again to stop manually.
 
 ## Dependencies
 

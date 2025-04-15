@@ -1,21 +1,37 @@
 {
   "key.category.easyautocycler": "Easy Auto Cycler",
-  "key.easyautocycler.toggle_auto_cycle": "Toggle Auto Trade Cycling",
+  "key.easyautocycler.toggle_auto_trade": "Toggle Auto Trade Cycling",
+  "key.easyautocycler.open_config": "Open Auto Cycler Config",
+
+  "gui.easyautocycler.config.title": "Easy Auto Cycler Configuration",
+  "gui.easyautocycler.config.enchantment_id": "Enchantment ID (e.g. minecraft:mending)",
+  "gui.easyautocycler.config.level": "Level",
+  "gui.easyautocycler.config.price": "Max Emeralds",
+  "gui.easyautocycler.config.save": "Save",
+  "gui.easyautocycler.config.clear": "Clear Target",
+  "gui.easyautocycler.config.drop_hint": "Drop Book",
+  "gui.easyautocycler.config.error.invalid_id": "Unknown Enchantment ID: '%s'",
+  "gui.easyautocycler.config.error.invalid_level": "Invalid Level: %s",
+  "gui.easyautocycler.config.error.invalid_price": "Invalid Price (1-64): %s",
+  "gui.easyautocycler.config.error.level_too_high": "Level %s too high (Max: %s)",
+  "gui.easyautocycler.config.error.validation_failed": "Error: %s",
+  "gui.easyautocycler.config.error.no_ench_data": "Book has no enchantment data.",
+  "gui.easyautocycler.config.success.saved": "Saved target: %s Level %s (Max %s Emeralds)",
+  "gui.easyautocycler.button.toggle.tooltip_start": "Start",
+  "gui.easyautocycler.button.toggle.tooltip_stop": "Stop",
+  "gui.easyautocycler.config.error.not_a_book": "Please drop an Enchanted Book!",
+
+  "gui.easyautocycler.button.config.tooltip": "Configure Auto Cycler",
+  "gui.easyautocycler.button.toggle.tooltip": "Toggle Auto Cycling",
+  "gui.easyautocycler.config.delay": "Cycle Delay (Ticks)",
+  "gui.easyautocycler.config.delay.value": "%s Ticks",
+  "gui.easyautocycler.config.delay.tooltip": "Delay between cycles (%s-%s ticks). Lower = Faster. Very low values may cause issues on servers! 2 is recommended.",
 
   "chat.easyautocycler.started": "Started auto trade cycling.",
   "chat.easyautocycler.stopped.reason": "Stopped auto trade cycling: %s",
   "chat.easyautocycler.found": "§aTarget trade found!",
   "chat.easyautocycler.notfound": "Could not find target trade.",
   "chat.easyautocycler.error.noscreen": "Error: Villager trade screen not open.",
-  "chat.easyautocycler.error.nobutton": "Error: Cycle button not found (Easy Villagers issue?).",
-  "chat.easyautocycler.error.noconfig": "Warning: No target trade configured. Cycling will not stop automatically.",
-
-  "commands.easyautocycler.setbook.unknown_enchantment": "Unknown enchantment ID: %s",
-  "commands.easyautocycler.setbook.invalid_level": "Invalid level %s for specified enchantment.",
-  "commands.easyautocycler.setbook.success": "Set trade target to %s Level %s (Max %s Emeralds)",
-  "commands.easyautocycler.clear.success": "Cleared trade target.",
-  "commands.easyautocycler.status.set": "Current target: %s Level %s (Max Emeralds: %s)",
-  "commands.easyautocycler.status.none": "No target trade currently set."
-
+  "chat.easyautocycler.error.noconfig": "Warning: No target trade configured. Cycling will not stop automatically."
 
 }

@@ -1,14 +1,14 @@
 package com.uncraftbar.easyautocycler;
 
 import com.mojang.logging.LogUtils;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
-import org.slf4j.Logger;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 
+import org.slf4j.Logger;
 
 @Mod(EasyAutoCyclerMod.MODID)
 public class EasyAutoCyclerMod {
@@ -19,7 +19,7 @@ public class EasyAutoCyclerMod {
     public EasyAutoCyclerMod(IEventBus modEventBus) {
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
-        modEventBus.addListener(Keybindings::registerKeyMappings);
+        modEventBus.addListener(this::registerKeybindings);
 
 
         LOGGER.info("EasyAutoCyclerMod loaded!");
@@ -36,5 +36,8 @@ public class EasyAutoCyclerMod {
         LOGGER.info("Client event handlers registered.");
     }
 
+    private void registerKeybindings(final RegisterKeyMappingsEvent event) {
+        Keybindings.registerKeyMappings(event);
+    }
 
 }

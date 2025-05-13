@@ -21,12 +21,17 @@ public class EasyAutoCyclerMod {
         modEventBus.addListener(this::clientSetup);
         modEventBus.addListener(this::registerKeybindings);
 
-
         LOGGER.info("EasyAutoCyclerMod loaded!");
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("Common setup");
+        
+        // Initialize the AutomationManager here
+        event.enqueueWork(() -> {
+            LOGGER.info("Initializing AutomationManager");
+            AutomationManager.initialize();
+        });
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {
@@ -39,5 +44,4 @@ public class EasyAutoCyclerMod {
     private void registerKeybindings(final RegisterKeyMappingsEvent event) {
         Keybindings.registerKeyMappings(event);
     }
-
 }

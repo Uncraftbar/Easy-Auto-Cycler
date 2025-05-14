@@ -5,7 +5,9 @@ import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -39,12 +41,19 @@ public class AutomationManager {
     public static final int DEFAULT_CLICK_DELAY = 2;
     public static final int MIN_CLICK_DELAY = 1;
     public static final int MAX_CLICK_DELAY = 5;
-
+    
+    // Mode constants for cycling
+    public static final int MODE_ENCHANTMENT = 0;
+    public static final int MODE_ITEM = 1;
+    private int cycleMode = MODE_ENCHANTMENT; // Default to enchantment mode
+    
     @Nullable private Enchantment targetEnchantment = null;
     @Nullable private ResourceLocation targetEnchantmentId = null;
+    @Nullable private ResourceLocation targetItemId = null;
     private int maxEmeraldCost = 64;
     private int targetLevel = 1;
     private int clickDelay = DEFAULT_CLICK_DELAY; // Default value
+    private int targetItemCount = 1;
 
     // Mod integration handlers
     private static boolean initialized = false;
@@ -161,15 +170,26 @@ public class AutomationManager {
     public boolean isRunning() { return isRunning.get(); }
     @Nullable public Enchantment getTargetEnchantment() { return targetEnchantment; }
     @Nullable public ResourceLocation getTargetEnchantmentId() { return targetEnchantmentId; }
+    @Nullable public ResourceLocation getTargetItemId() { return targetItemId; }
     public int getMaxEmeraldCost() { return maxEmeraldCost; }
     public int getTargetLevel() { return targetLevel; }
     public int getClickDelay() { return clickDelay; }
+    public int getCycleMode() { return cycleMode; }
+    public int getTargetItemCount() { return targetItemCount; }
 
     public void configureTarget(Enchantment enchantment, ResourceLocation enchantmentId, int level, int emeraldCost) {
         this.targetEnchantment = enchantment;
         this.targetEnchantmentId = enchantmentId;
         this.targetLevel = level;
         this.maxEmeraldCost = emeraldCost;
+        this.cycleMode = MODE_ENCHANTMENT;
+    }
+
+    public void configureTargetItem(ResourceLocation itemId, int itemCount, int emeraldCost) {
+        this.targetItemId = itemId;
+        this.targetItemCount = itemCount;
+        this.maxEmeraldCost = emeraldCost;
+        this.cycleMode = MODE_ITEM;
     }
 
     public void configureSpeed(int delay) {
@@ -181,6 +201,7 @@ public class AutomationManager {
     public void clearTarget() {
         this.targetEnchantment = null;
         this.targetEnchantmentId = null;
+        this.targetItemId = null;
         EasyAutoCyclerMod.LOGGER.info("Cleared target trade.");
         this.sendMessageToPlayer(Component.literal("Cleared target trade. Automation will not stop automatically."));
     }
@@ -210,7 +231,7 @@ public class AutomationManager {
             return; 
         }
         
-        if (targetEnchantment == null) {
+        if (targetEnchantment == null && targetItemId == null) {
             this.sendMessageToPlayer(Component.literal("Warning: No target trade configured. Cycling will not stop automatically."));
             EasyAutoCyclerMod.LOGGER.warn("Starting cycle without target definition."); 
         }
@@ -280,7 +301,7 @@ public class AutomationManager {
         }
         
         MerchantOffers offers = screen.getMenu().getOffers();
-        if (targetEnchantment != null && checkTrades(offers)) {
+        if (cycleMode == MODE_ENCHANTMENT && targetEnchantment != null && checkTradesForEnchantment(offers)) {
             EasyAutoCyclerMod.LOGGER.debug("Target trade FOUND!");
             this.sendMessageToPlayer(Component.literal("§aTarget trade found!"));
             try { 
@@ -292,6 +313,19 @@ public class AutomationManager {
                 EasyAutoCyclerMod.LOGGER.error("Failed to play 'trade found' sound effect", e); 
             } 
             stop("Target trade found"); 
+            return; 
+        } else if (cycleMode == MODE_ITEM && targetItemId != null && checkTradesForItem(offers)) {
+            EasyAutoCyclerMod.LOGGER.debug("Target item trade FOUND!");
+            this.sendMessageToPlayer(Component.literal("§aTarget item trade found!"));
+            try { 
+                Minecraft mc = Minecraft.getInstance();
+                if (mc != null && mc.getSoundManager() != null) {
+                    mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING, 1.0F)); 
+                } 
+            } catch (Exception e) { 
+                EasyAutoCyclerMod.LOGGER.error("Failed to play 'trade found' sound effect", e); 
+            } 
+            stop("Target item trade found"); 
             return; 
         }
         
@@ -313,41 +347,84 @@ public class AutomationManager {
         } else {
             EasyAutoCyclerMod.LOGGER.trace("canCycle() returned false, waiting...");
         }
-    }
-
-    private boolean checkTrades(MerchantOffers offers) {
+    }    private boolean checkTradesForEnchantment(MerchantOffers offers) {
         if (targetEnchantment == null) return false;
         for (MerchantOffer offer : offers) { 
             ItemStack resultStack = offer.getResult();
-            if (!resultStack.is(Items.ENCHANTED_BOOK)) continue;
+            if (offer.isOutOfStock()) continue;
+            
+            // Check emerald cost
+            ItemStack costA = offer.getCostA();
+            ItemStack costB = offer.getCostB();
+            
+            if (costA.is(Items.EMERALD) && costA.getCount() <= this.maxEmeraldCost) {
+                // Cost A is emeralds and within our limit - proceed
+            } else if (costB.is(Items.EMERALD) && costB.getCount() <= this.maxEmeraldCost) {
+                // Cost B is emeralds and within our limit - proceed
+            } else { 
+                continue; 
+            }
+            
+            // Check for enchantments - handle books and other items differently
+            boolean foundMatchingEnchantment = false;
+            
+            if (resultStack.is(Items.ENCHANTED_BOOK)) {
+                // For enchanted books, check stored enchantments
+                ItemEnchantments storedEnchantments = resultStack.get(DataComponents.STORED_ENCHANTMENTS);
+                if (storedEnchantments != null && !storedEnchantments.isEmpty()) {
+                    for (Holder<Enchantment> enchHolder : storedEnchantments.keySet()) { 
+                        Enchantment ench = enchHolder.value();
+                        int level = storedEnchantments.getLevel(enchHolder);
+                        if (ench.equals(this.targetEnchantment) && level == this.targetLevel) { 
+                            foundMatchingEnchantment = true; 
+                            break; 
+                        } 
+                    }
+                }
+            } else {
+                // For other items, check regular enchantments
+                ItemEnchantments enchantments = resultStack.get(DataComponents.ENCHANTMENTS);
+                if (enchantments != null && !enchantments.isEmpty()) {
+                    for (Holder<Enchantment> enchHolder : enchantments.keySet()) { 
+                        Enchantment ench = enchHolder.value();
+                        int level = enchantments.getLevel(enchHolder);
+                        if (ench.equals(this.targetEnchantment) && level == this.targetLevel) { 
+                            foundMatchingEnchantment = true; 
+                            break; 
+                        } 
+                    }
+                }
+            }
+            
+            if (foundMatchingEnchantment) return true; 
+        } 
+        
+        return false;}
+    
+    private boolean checkTradesForItem(MerchantOffers offers) {
+        if (targetItemId == null) return false;
+        for (MerchantOffer offer : offers) { 
+            ItemStack resultStack = offer.getResult();
+            
+            // Check if the item ID matches the target
+            ResourceLocation itemIdInStack = Minecraft.getInstance().level.registryAccess()
+                .registryOrThrow(Registries.ITEM).getKey(resultStack.getItem());
+            if (!itemIdInStack.equals(targetItemId)) continue;
+            
             if (offer.isOutOfStock()) continue;
             
             ItemStack costA = offer.getCostA();
             ItemStack costB = offer.getCostB();
-            final int requiredBookCost = 1;
             
             if (costA.is(Items.EMERALD) && costA.getCount() <= this.maxEmeraldCost) {
-                if (!costB.is(Items.BOOK) || costB.getCount() != requiredBookCost) continue;
+                // Allow any item as secondary cost for general items
             } else if (costB.is(Items.EMERALD) && costB.getCount() <= this.maxEmeraldCost) {
-                if (!costA.is(Items.BOOK) || costA.getCount() != requiredBookCost) continue; 
+                // Allow any item as primary cost for general items
             } else { 
                 continue; 
             } 
             
-            ItemEnchantments enchantments = resultStack.get(DataComponents.STORED_ENCHANTMENTS);
-            if (enchantments == null || enchantments.isEmpty()) continue;
-            
-            boolean foundMatchingEnchantment = false;
-            for (Holder<Enchantment> enchHolder : enchantments.keySet()) { 
-                Enchantment ench = enchHolder.value();
-                int level = enchantments.getLevel(enchHolder);
-                if (ench.equals(this.targetEnchantment) && level == this.targetLevel) { 
-                    foundMatchingEnchantment = true; 
-                    break; 
-                } 
-            }
-            
-            if (foundMatchingEnchantment) return true; 
+            if (resultStack.getCount() >= this.targetItemCount) return true; 
         } 
         
         return false; 

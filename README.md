@@ -27,6 +27,7 @@ Set your desired enchantment and price, then press a keybind to automatically re
 **Mod Compatibility (only ONE is required):**
 *   **[Easy Villagers Mod](https://www.curseforge.com/minecraft/mc-mods/easy-villagers)**
 *   **[Trade Cycling Mod](https://www.curseforge.com/minecraft/mc-mods/trade-cycling)**
+(Note, this repo is only for 1.21.1, the 1.20.1 Forge build does only support Easy Villagers.)
 
 
 ## How to Use:

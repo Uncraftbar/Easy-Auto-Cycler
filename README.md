@@ -33,7 +33,16 @@ Create complex filter rules with multiple criteria, save them persistently, and 
 **Mod Compatibility (only ONE is required):**
 *   **[Easy Villagers Mod](https://www.curseforge.com/minecraft/mc-mods/easy-villagers)**
 *   **[Trade Cycling Mod](https://www.curseforge.com/minecraft/mc-mods/trade-cycling)**
-(Note, this repo is only for 1.21.1, the 1.20.1 Forge build does only support Easy Villagers.)
+
+## Multi-Version Support
+
+This repository now supports multiple Minecraft versions using a branch-based structure:
+
+- **`main`** - Latest stable version (currently NeoForge 1.21.1 with advanced filtering)
+- **`neoforge-1.21.1`** - NeoForge 1.21.1 with advanced filtering system
+- **`forge-1.20.1`** - Forge 1.20.1 with basic enchantment targeting (Easy Villagers only)
+
+For version-specific downloads and releases, check the [Releases](https://github.com/Uncraftbar/Easy-Auto-Cycler/releases) page or browse branches.
 
 
 ## How to Use:

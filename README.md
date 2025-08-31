@@ -5,19 +5,25 @@
 [![GitHub license](https://img.shields.io/github/license/Uncraftbar/Easy-Auto-Cycler)](LICENSE)
 
 
-A simple client-side mod for Minecraft that adds automation for cycling villager trades, specifically targeting Librarian enchanted book trades. It supports both [Easy Villagers](https://www.curseforge.com/minecraft/mc-mods/easy-villagers) and [Trade Cycling](https://www.curseforge.com/minecraft/mc-mods/trade-cycling) mods.
+A powerful client-side mod for Minecraft that adds intelligent automation for cycling villager trades. Originally designed for Librarian enchanted book trades, it now supports advanced filtering for any trade type. It supports both [Easy Villagers](https://www.curseforge.com/minecraft/mc-mods/easy-villagers) and [Trade Cycling](https://www.curseforge.com/minecraft/mc-mods/trade-cycling) mods.
 
-Set your desired enchantment and price, then press a keybind to automatically re-roll trades until you find what you're looking for!
+Create complex filter rules with multiple criteria, save them persistently, and let the mod automatically find the trades you want!
 
 ## Features
 
 *   **Dual-Mod Support:** Works with either [Easy Villagers](https://www.curseforge.com/minecraft/mc-mods/easy-villagers) or [Trade Cycling](https://www.curseforge.com/minecraft/mc-mods/trade-cycling) mod - only one is required.
 *   **NeoForge Support:** Built for Minecraft NeoForge 1.21.1.
-*   **Automated Trade Cycling:** Automatically cycles villager trades repeatedly.
-*   **Targeted Search:** Configure the specific enchanted book (enchantment, level, max emerald cost) you want.
-*   **Auto-Stop:** Cycling automatically stops when the desired trade is found.
-*   **Manual Toggle:** Start and stop cycling easily with a configurable keybind (Default: `R`).
-*   **Lightweight & Client-Side:** Doesn't affect server performance or require installation on the server.
+*   **Advanced Filter System:** Create multiple complex filters with various criteria:
+    *   **Enchantment Filtering:** Target specific enchantments with minimum level requirements
+    *   **Item Filtering:** Search for specific items with minimum quantity requirements
+    *   **Custom Payment Items:** Support for any payment item, not just emeralds
+    *   **Flexible Logic:** Choose between AND/OR logic for multiple filters
+*   **Session Persistence:** Filters automatically save and restore between game sessions
+*   **Automated Trade Cycling:** Automatically cycles villager trades repeatedly until criteria are met
+*   **Auto-Stop:** Cycling automatically stops when any desired trade is found
+*   **Manual Toggle:** Start and stop cycling easily with a configurable keybind (Default: `R`)
+*   **Intuitive GUI:** Easy-to-use interface with autocomplete for enchantment and item IDs
+*   **Lightweight & Client-Side:** Doesn't affect server performance or require installation on the server
 
 ## Requirements
 
@@ -32,17 +38,32 @@ Set your desired enchantment and price, then press a keybind to automatically re
 
 ## How to Use:
 
-- Open Config: Press the config keybind (Default: C) or click the "Cog" button added to the Villager Trade Screen.
-- Set Target: In the GUI:
-  - Type the Enchantment ID (e.g., minecraft:mending). Suggestions will appear as you type (Tab accepts).
-  - Enter the desired Level.
-  - Enter the Max Emeralds you'll pay.
-  - Use the Cycle Delay button to choose speed (1-5 ticks, lower is faster).
-  - Click Save.
-- Start/Stop Cycling:
-  - Open a Librarian's trade GUI (the mod will work with either Easy Villagers or Trade Cycling interfaces)
-  - Press the Toggle Auto Trade Cycling keybind (Default: R) OR click the "Play" button added to the Villager Trade Screen.
-  - Press the keybind or click the button again to stop manually.
+### Setting Up Filters:
+1. **Open Config:** Press the config keybind (Default: `C`) or click the "⚙" button in the Villager Trade Screen
+2. **Add Filters:** Click "Add Filter" to create a new filter rule
+3. **Configure Each Filter:**
+   - **Enchantment ID:** (Optional) Target specific enchantment (e.g., `minecraft:mending`)
+   - **Min Enchantment Level:** Minimum level required (e.g., `3` will match level 3, 4, 5...)
+   - **Item ID:** (Optional) Target specific item (e.g., `minecraft:diamond_sword`)
+   - **Min Count:** Minimum quantity of the item
+   - **Payment Item:** (Optional) Custom payment item (leave empty for emeralds)
+   - **Max Payment Cost:** Maximum cost willing to pay
+4. **Choose Logic Mode:**
+   - **Match Any (OR):** Stop when ANY filter matches a trade
+   - **Match All (AND):** Stop when ALL filters match different trades
+5. **Save Filters:** Your filters persist between game sessions automatically
+
+### Running the Automation:
+1. **Open Trade GUI:** Access any villager's trade interface (works with Easy Villagers or Trade Cycling)
+2. **Start Cycling:** Press the toggle keybind (Default: `R`) OR click the "▶" button
+3. **Monitor Progress:** The mod will automatically cycle through trades until your criteria are met
+4. **Manual Stop:** Press the keybind or button again to stop manually
+
+### Tips:
+- Use autocomplete suggestions when typing enchantment/item IDs
+- Set at least one criterion (Enchantment ID OR Item ID) per filter
+- Lower cycle delays = faster but may cause server issues
+- Filters can be temporarily disabled without deleting them
 
 ## Dependencies
 

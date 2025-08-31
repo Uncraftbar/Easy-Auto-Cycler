@@ -2,6 +2,7 @@ package com.uncraftbar.easyautocycler.gui;
 
 import com.uncraftbar.easyautocycler.AutomationManager;
 import com.uncraftbar.easyautocycler.EasyAutoCyclerMod;
+import com.uncraftbar.easyautocycler.filter.FilterEntry;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -17,6 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.ChatFormatting;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 import javax.annotation.Nullable;
 
 public class ConfigScreen extends Screen {
@@ -35,10 +37,17 @@ public class ConfigScreen extends Screen {
     private List<String> enchantmentSuggestions = List.of();
     private List<String> itemSuggestions = List.of();
     private int currentMode = AutomationManager.MODE_ENCHANTMENT;
+    
+    // Filter system components
+    private ScrollableContainer filtersContainer;
+    private List<FilterEntry> filters = new ArrayList<>();
+    private CycleButton<Boolean> matchModeCycleButton;
+    private boolean matchAny = true;
 
     private static final int PADDING = 6;
     private static final int INPUT_HEIGHT = 20;
     private static final int BUTTON_HEIGHT = 20;
+    private static final int FILTER_ITEM_HEIGHT = 25;
 
     private static final Component DELAY_TOOLTIP = Component.translatable("gui.easyautocycler.config.delay.tooltip",
                     AutomationManager.MIN_CLICK_DELAY, AutomationManager.MAX_CLICK_DELAY)
@@ -48,6 +57,10 @@ public class ConfigScreen extends Screen {
     public ConfigScreen(@Nullable Screen previousScreen, Component title) {
         super(title);
         this.previousScreen = previousScreen;
+        
+        // Load current filter data
+        this.filters.addAll(AutomationManager.INSTANCE.getFilterEntries());
+        this.matchAny = AutomationManager.INSTANCE.isMatchAny();
     }
 
     @Override
@@ -66,159 +79,110 @@ public class ConfigScreen extends Screen {
             EasyAutoCyclerMod.LOGGER.error("Failed to load registry for suggestions", e); 
             this.enchantmentSuggestions = List.of(); 
             this.itemSuggestions = List.of();
-        }
-
-        int contentWidth = 220; 
+        }        int contentWidth = 300; // Wider to accommodate filters
         int guiLeft = (this.width - contentWidth) / 2; 
         int inputWidthFull = contentWidth; 
         int inputWidthSmall = (contentWidth / 2) - (PADDING / 2);
-        int currentY = this.height / 2 - 70; // Start Y a bit higher to accommodate the new mode button
+        
+        // Start with proper spacing for title
+        int currentY = PADDING * 4 + 10; // More space for title
 
-        // Get current configuration
-        ResourceLocation currentEnchantId = AutomationManager.INSTANCE.getTargetEnchantmentId(); 
-        String currentEnchantIdString = (currentEnchantId != null) ? currentEnchantId.toString() : ""; 
-        
-        ResourceLocation currentItemId = AutomationManager.INSTANCE.getTargetItemId();
-        String currentItemIdString = (currentItemId != null) ? currentItemId.toString() : "";
-        
-        int currentLevel = AutomationManager.INSTANCE.getTargetLevel(); 
-        int currentItemCount = AutomationManager.INSTANCE.getTargetItemCount();
-        int currentPrice = AutomationManager.INSTANCE.getMaxEmeraldCost(); 
+        // Get current configuration  
         int currentDelay = AutomationManager.INSTANCE.getClickDelay();
-        
-        // Get current mode from automation manager
-        currentMode = AutomationManager.INSTANCE.getCycleMode();
 
-        // Add mode selection button
-        this.modeCycleButton = CycleButton.<Integer>builder(value -> 
-            Component.translatable(value == AutomationManager.MODE_ENCHANTMENT ? 
-                "gui.easyautocycler.config.mode.enchantment" : "gui.easyautocycler.config.mode.item"))
-                .withValues(AutomationManager.MODE_ENCHANTMENT, AutomationManager.MODE_ITEM)
-                .withInitialValue(currentMode)
+        // Filter management section - center the two buttons properly
+        int topButtonWidth = 120; // Slightly wider for better text fit
+        int buttonSpacing = 10;
+        int totalButtonsWidth = (topButtonWidth * 2) + buttonSpacing;
+        int buttonsStartX = guiLeft + (contentWidth - totalButtonsWidth) / 2;
+        
+        // Add filter button
+        this.addRenderableWidget(Button.builder(
+                Component.translatable("gui.easyautocycler.filters.add"),
+                button -> openFilterEditor(null))
+                .pos(buttonsStartX, currentY)
+                .size(topButtonWidth, BUTTON_HEIGHT)
+                .build());
+                
+        // Match mode cycle button
+        this.matchModeCycleButton = CycleButton.<Boolean>builder(value -> 
+                Component.translatable(value ? 
+                    "gui.easyautocycler.filters.match_any" : 
+                    "gui.easyautocycler.filters.match_all"))
+                .withValues(true, false)
+                .withInitialValue(matchAny)
                 .displayOnlyValue()
-                .create(guiLeft, currentY, inputWidthFull, BUTTON_HEIGHT,
-                        Component.translatable("gui.easyautocycler.config.mode"),
+                .create(buttonsStartX + topButtonWidth + buttonSpacing, currentY, topButtonWidth, BUTTON_HEIGHT,
+                        Component.empty(),
                         (cycleButton, newValue) -> {
-                            currentMode = newValue;
-                            updateVisibility();
+                            matchAny = newValue;
                         });
-
-        this.addRenderableWidget(this.modeCycleButton);
-        currentY += BUTTON_HEIGHT + PADDING + 10;
-
-        // Create input fields for enchantment mode
-        this.enchantmentIdInput = new SuggestingEditBox(
-            this.font, guiLeft, currentY, inputWidthFull, INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.config.enchantment_id"), 
-            this.enchantmentSuggestions, (t) -> {}); 
-        this.enchantmentIdInput.setMaxLength(128); 
-        this.enchantmentIdInput.setValue(currentEnchantIdString);  
-        this.enchantmentIdInput.setResponder(this::onEnchantmentInputChanged); 
-        this.addRenderableWidget(this.enchantmentIdInput);
-
-        // Create input fields for item mode
-        this.itemIdInput = new SuggestingEditBox(
-            this.font, guiLeft, currentY, inputWidthFull, INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.config.item_id"), 
-            this.itemSuggestions, (t) -> {});
-        this.itemIdInput.setMaxLength(128);
-        this.itemIdInput.setValue(currentItemIdString);
-        this.itemIdInput.setResponder(this::onItemInputChanged);
-        this.addRenderableWidget(this.itemIdInput);
         
-        currentY += INPUT_HEIGHT + PADDING + 10;
+        this.addRenderableWidget(this.matchModeCycleButton);
+        currentY += BUTTON_HEIGHT + PADDING + 5; // Add a bit more spacing
 
-        // Level input (for enchantment mode)
-        this.levelInput = new EditBox(
-            this.font, guiLeft, currentY, inputWidthSmall, INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.config.level")); 
-        this.levelInput.setValue(String.valueOf(currentLevel)); 
-        this.levelInput.setFilter(s -> s.matches("[0-9]*")); 
-        this.addRenderableWidget(this.levelInput);
+        // Calculate better spacing for bottom elements
+        int bottomMargin = PADDING + 5; // Space from screen bottom
+        int delayButtonY = this.height - bottomMargin - BUTTON_HEIGHT; // Done button position
+        int saveButtonY = delayButtonY - BUTTON_HEIGHT - PADDING; // Save/Clear buttons
+        int delayY = saveButtonY - BUTTON_HEIGHT - PADDING; // Delay button
         
-        // Item count (for item mode)
-        this.itemCountInput = new EditBox(
-            this.font, guiLeft, currentY, inputWidthSmall, INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.config.count"));
-        this.itemCountInput.setValue(String.valueOf(currentItemCount));
-        this.itemCountInput.setFilter(s -> s.matches("[0-9]*"));
-        this.addRenderableWidget(this.itemCountInput);
+        // Scrollable container for filters - calculate remaining space
+        int containerHeight = delayY - currentY - PADDING;
+        filtersContainer = new ScrollableContainer(
+            guiLeft, 
+            currentY, 
+            inputWidthFull, 
+            containerHeight);
+        this.addRenderableWidget(filtersContainer);
 
-        // Price input (common to both modes)
-        this.priceInput = new EditBox(
-            this.font, guiLeft + inputWidthSmall + PADDING, currentY, inputWidthSmall, INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.config.price")); 
-        this.priceInput.setValue(String.valueOf(currentPrice)); 
-        this.priceInput.setFilter(s -> s.matches("[0-9]*")); 
-        this.addRenderableWidget(this.priceInput); 
-        
-        currentY += INPUT_HEIGHT + PADDING + 10;
-
-        // Delay button (common to both modes)
+        // Delay button (positioned above Save/Clear buttons)
         this.delayCycleButton = CycleButton.<Integer>builder(value -> 
             Component.translatable("gui.easyautocycler.config.delay.value", value))
                 .withValues(AutomationManager.MIN_CLICK_DELAY, 2, 3, 4, 5)
                 .withInitialValue(currentDelay)
                 .displayOnlyValue()
-                .create(guiLeft, currentY, inputWidthFull, BUTTON_HEIGHT,
+                .create(guiLeft, delayY, inputWidthFull, BUTTON_HEIGHT,
                         Component.translatable("gui.easyautocycler.config.delay"),
                         (cycleButton, newValue) -> {
                             AutomationManager.INSTANCE.configureSpeed(newValue);
                         });
 
         this.addRenderableWidget(this.delayCycleButton);
-        currentY += BUTTON_HEIGHT + PADDING + 10; // Move Y down
 
-        // Action buttons
-        int buttonY = currentY;
+        // Save and Clear buttons
+        int bottomButtonWidth = (inputWidthFull - PADDING) / 2;
         this.addRenderableWidget(Button.builder(Component.translatable("gui.easyautocycler.config.save"), this::onSave)
-            .pos(guiLeft, buttonY).size(inputWidthSmall, BUTTON_HEIGHT).build());
+            .pos(guiLeft, saveButtonY).size(bottomButtonWidth, BUTTON_HEIGHT).build());
         this.addRenderableWidget(Button.builder(Component.translatable("gui.easyautocycler.config.clear"), this::onClear)
-            .pos(guiLeft + inputWidthSmall + PADDING, buttonY).size(inputWidthSmall, BUTTON_HEIGHT).build()); 
+            .pos(guiLeft + bottomButtonWidth + PADDING, saveButtonY).size(bottomButtonWidth, BUTTON_HEIGHT).build()); 
         
-        currentY += BUTTON_HEIGHT + PADDING;
-        
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> this.onClose())
-            .pos(guiLeft, currentY).size(inputWidthFull, BUTTON_HEIGHT).build());
+        // Cancel button (at bottom with proper margin)
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> this.onClose())
+            .pos(guiLeft, delayButtonY).size(inputWidthFull, BUTTON_HEIGHT).build());
             
-        // Initialize visibility based on current mode
-        updateVisibility();
+        // Populate the filter list
+        refreshFiltersList();
     }
     
-    private void updateVisibility() {
-        if (enchantmentIdInput != null) enchantmentIdInput.setVisible(currentMode == AutomationManager.MODE_ENCHANTMENT);
-        if (itemIdInput != null) itemIdInput.setVisible(currentMode == AutomationManager.MODE_ITEM);
-        if (levelInput != null) levelInput.setVisible(currentMode == AutomationManager.MODE_ENCHANTMENT);
-        if (itemCountInput != null) itemCountInput.setVisible(currentMode == AutomationManager.MODE_ITEM);
-    }
-
-    private void onEnchantmentInputChanged(String text) { 
-        if (this.enchantmentIdInput != null) { 
-            this.enchantmentIdInput.setSuggestion(calculateSuggestions(text, this.enchantmentSuggestions)); 
-        } 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return filtersContainer.mouseScrolled(mouseX, mouseY, scrollX, scrollY) || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
     
-    private void onItemInputChanged(String text) { 
-        if (this.itemIdInput != null) { 
-            this.itemIdInput.setSuggestion(calculateSuggestions(text, this.itemSuggestions)); 
-        } 
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        return filtersContainer.mouseClicked(mouseX, mouseY, button) || super.mouseClicked(mouseX, mouseY, button);
     }
-
-    private String calculateSuggestions(String currentText, List<String> suggestions) { 
-        if (currentText.isEmpty() || suggestions.isEmpty()) { 
-            return null; 
-        } 
-        String lowerCaseText = currentText.toLowerCase(); 
-        for (String suggestion : suggestions) { 
-            if (suggestion.toLowerCase().startsWith(lowerCaseText)) { 
-                if (suggestion.length() > currentText.length()) { 
-                    return suggestion.substring(currentText.length()); 
-                } else { 
-                    return null; 
-                } 
-            } 
-        } 
-        return null; 
+    
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return filtersContainer.mouseDragged(mouseX, mouseY, button, dragX, dragY) || super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+    
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return filtersContainer.mouseReleased(mouseX, mouseY, button) || super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
@@ -227,26 +191,31 @@ public class ConfigScreen extends Screen {
         super.render(guiGraphics, mouseX, mouseY, partialTick); // Renders widgets
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, PADDING * 2, 0xFFFFFF);
 
-        int labelYOffset = -10;
-        guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.mode"), 
-            this.modeCycleButton.getX(), this.modeCycleButton.getY() + labelYOffset, 0xA0A0A0);
-            
-        if (currentMode == AutomationManager.MODE_ENCHANTMENT) {
-            guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.enchantment_id"), 
-                this.enchantmentIdInput.getX(), this.enchantmentIdInput.getY() + labelYOffset, 0xA0A0A0);
-            guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.level"), 
-                this.levelInput.getX(), this.levelInput.getY() + labelYOffset, 0xA0A0A0);
-        } else {
-            guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.item_id"), 
-                this.itemIdInput.getX(), this.itemIdInput.getY() + labelYOffset, 0xA0A0A0);
-            guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.count"), 
-                this.itemCountInput.getX(), this.itemCountInput.getY() + labelYOffset, 0xA0A0A0);
+        int labelYOffset = -12; // Slightly more space above button
+        // Only draw delay label if it won't overlap with filter container
+        int delayLabelY = this.delayCycleButton.getY() + labelYOffset;
+        int containerBottomY = filtersContainer.getY() + filtersContainer.getHeight();
+        
+        if (delayLabelY > containerBottomY + 5) { // 5px clearance
+            guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.delay"), 
+                this.delayCycleButton.getX(), delayLabelY, 0xA0A0A0);
         }
         
-        guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.price"), 
-            this.priceInput.getX(), this.priceInput.getY() + labelYOffset, 0xA0A0A0);
-        guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.delay"), 
-            this.delayCycleButton.getX(), this.delayCycleButton.getY() + labelYOffset, 0xA0A0A0);
+        // If no filters, display a message
+        if (filters.isEmpty()) {
+            Component noFiltersMsg = Component.translatable("gui.easyautocycler.filters.no_filters")
+                .withStyle(ChatFormatting.GRAY);
+            
+            int containerCenterX = filtersContainer.getX() + filtersContainer.getWidth() / 2;
+            int containerCenterY = filtersContainer.getY() + filtersContainer.getHeight() / 2;
+            
+            guiGraphics.drawCenteredString(
+                this.font,
+                noFiltersMsg,
+                containerCenterX,
+                containerCenterY - 10,
+                0xAAAAAA);
+        }
 
         if (this.delayCycleButton != null && this.delayCycleButton.isHovered() && this.delayCycleButton.active) {
             guiGraphics.renderTooltip(this.font, DELAY_TOOLTIP, mouseX, mouseY);
@@ -260,169 +229,28 @@ public class ConfigScreen extends Screen {
             return; 
         }
 
-        // Handle save based on current mode
-        if (currentMode == AutomationManager.MODE_ENCHANTMENT) {
-            saveEnchantmentMode();
-        } else {
-            saveItemMode();
-        }
+        // Save all filters to the AutomationManager
+        AutomationManager.INSTANCE.setFilterEntries(filters);
+        AutomationManager.INSTANCE.setMatchAny(matchModeCycleButton.getValue());
+        
+        this.sendMessageToPlayer(Component.literal("Configuration saved!").withStyle(ChatFormatting.GREEN));
+        this.onClose();
     }
 
-    private void saveEnchantmentMode() {
-        if (this.enchantmentIdInput == null || this.levelInput == null || this.priceInput == null) {
-            EasyAutoCyclerMod.LOGGER.error("Cannot save, Enchantment GUI components not initialized correctly.");
-            this.sendMessageToPlayer(Component.literal("Error saving configuration!").withStyle(ChatFormatting.RED));
-            return;
-        }
-        
-        String idString = this.enchantmentIdInput.getValue().trim(); 
-        String levelString = this.levelInput.getValue().trim(); 
-        String priceString = this.priceInput.getValue().trim();
-        
-        ResourceLocation enchantmentId = ResourceLocation.tryParse(idString); 
-        int level = 1; 
-        int price = 64; 
-        boolean valid = true;
-        
-        if (enchantmentId == null || idString.isEmpty()) { 
-            this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.invalid_id", idString)
-                .withStyle(ChatFormatting.RED)); 
-            valid = false; 
-        }
-        
-        try { 
-            level = Integer.parseInt(levelString); 
-            if (level <= 0) throw new NumberFormatException(); 
-        } catch (NumberFormatException e) { 
-            this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.invalid_level", levelString)
-                .withStyle(ChatFormatting.RED)); 
-            valid = false; 
-        }
-        
-        try { 
-            price = Integer.parseInt(priceString); 
-            if (price <= 0 || price > 64) throw new NumberFormatException(); 
-        } catch (NumberFormatException e) { 
-            this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.invalid_price", priceString)
-                .withStyle(ChatFormatting.RED)); 
-            valid = false; 
-        }
-
-        if (!valid) return;
-        
-        try {
-            Registry<Enchantment> enchantmentRegistry = Minecraft.getInstance().level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            Enchantment enchantment = enchantmentRegistry.getOptional(enchantmentId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown enchantment ID: " + enchantmentId));
-                
-            if (level > enchantment.getMaxLevel()) { 
-                this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.level_too_high", level, enchantment.getMaxLevel())
-                    .withStyle(ChatFormatting.RED)); 
-                return; 
-            }
-
-            AutomationManager.INSTANCE.configureTarget(enchantment, enchantmentId, level, price);
-            EasyAutoCyclerMod.LOGGER.info("configureTarget called successfully from GUI with enchantment: {}, level: {}, price: {}", 
-                enchantmentId, level, price);
-
-            sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.success.saved", idString, level, price)
-                .withStyle(ChatFormatting.GREEN));
-                
-            this.onClose();
-        } catch (Exception e) {
-            EasyAutoCyclerMod.LOGGER.error("Failed to validate or save enchantment config from GUI", e); 
-            String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName(); 
-            
-            if (e instanceof IllegalArgumentException && errorMsg.contains("Unknown enchantment ID")) { 
-                this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.invalid_id", idString)
-                    .withStyle(ChatFormatting.RED)); 
-            } else { 
-                this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.validation_failed", errorMsg)
-                    .withStyle(ChatFormatting.RED)); 
-            }
-        }
-    }
-
-    private void saveItemMode() {
-        if (this.itemIdInput == null || this.itemCountInput == null || this.priceInput == null) {
-            EasyAutoCyclerMod.LOGGER.error("Cannot save, Item GUI components not initialized correctly.");
-            this.sendMessageToPlayer(Component.literal("Error saving configuration!").withStyle(ChatFormatting.RED));
-            return;
-        }
-        
-        String idString = this.itemIdInput.getValue().trim(); 
-        String countString = this.itemCountInput.getValue().trim(); 
-        String priceString = this.priceInput.getValue().trim();
-        
-        ResourceLocation itemId = ResourceLocation.tryParse(idString); 
-        int count = 1; 
-        int price = 64; 
-        boolean valid = true;
-        
-        if (itemId == null || idString.isEmpty()) { 
-            this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.invalid_item_id", idString)
-                .withStyle(ChatFormatting.RED)); 
-            valid = false; 
-        }
-        
-        try { 
-            count = Integer.parseInt(countString); 
-            if (count <= 0) throw new NumberFormatException(); 
-        } catch (NumberFormatException e) { 
-            this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.invalid_count", countString)
-                .withStyle(ChatFormatting.RED)); 
-            valid = false; 
-        }
-        
-        try { 
-            price = Integer.parseInt(priceString); 
-            if (price <= 0 || price > 64) throw new NumberFormatException(); 
-        } catch (NumberFormatException e) { 
-            this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.invalid_price", priceString)
-                .withStyle(ChatFormatting.RED)); 
-            valid = false; 
-        }
-
-        if (!valid) return;
-        
-        try {
-            Registry<Item> itemRegistry = Minecraft.getInstance().level.registryAccess().registryOrThrow(Registries.ITEM);
-            itemRegistry.getOptional(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown item ID: " + itemId));
-
-            AutomationManager.INSTANCE.configureTargetItem(itemId, count, price);
-            EasyAutoCyclerMod.LOGGER.info("configureTargetItem called successfully from GUI with item: {}, count: {}, price: {}", 
-                itemId, count, price);
-
-            sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.success.saved_item", idString, count, price)
-                .withStyle(ChatFormatting.GREEN));
-                
-            this.onClose();
-        } catch (Exception e) {
-            EasyAutoCyclerMod.LOGGER.error("Failed to validate or save item config from GUI", e); 
-            String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName(); 
-            
-            if (e instanceof IllegalArgumentException && errorMsg.contains("Unknown item ID")) { 
-                this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.invalid_item_id", idString)
-                    .withStyle(ChatFormatting.RED)); 
-            } else { 
-                this.sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.error.validation_failed", errorMsg)
-                    .withStyle(ChatFormatting.RED)); 
-            }
-        }
-    }
 
     private void onClear(Button button) {
         AutomationManager.INSTANCE.clearTarget();
         int defaultDelay = AutomationManager.DEFAULT_CLICK_DELAY;
         AutomationManager.INSTANCE.configureSpeed(defaultDelay);
 
-        if(this.enchantmentIdInput != null) this.enchantmentIdInput.setValue("");
-        if(this.itemIdInput != null) this.itemIdInput.setValue("");
-        if(this.levelInput != null) this.levelInput.setValue("1");
-        if(this.itemCountInput != null) this.itemCountInput.setValue("1");
-        if(this.priceInput != null) this.priceInput.setValue("64");
+        // Clear all filters
+        filters.clear();
+        refreshFiltersList();
+        
+        // Reset delay button
         if(this.delayCycleButton != null) this.delayCycleButton.setValue(defaultDelay);
+        
+        this.sendMessageToPlayer(Component.literal("Configuration cleared!").withStyle(ChatFormatting.YELLOW));
     }
 
     private void sendMessageToPlayer(Component message) { 
@@ -439,5 +267,92 @@ public class ConfigScreen extends Screen {
     
     @Override public boolean isPauseScreen() { 
         return false; 
+    }
+
+    /**
+     * Opens the filter editor screen for a new or existing filter
+     */
+    private void openFilterEditor(@Nullable FilterEntry filterToEdit) {
+        if (filterToEdit == null) {
+            // Create a new filter
+            FilterEntry newFilter = new FilterEntry();
+            FilterEditorScreen editorScreen = new FilterEditorScreen(this, newFilter, index -> {
+                // Add the new filter when saved
+                filters.add(newFilter);
+                refreshFiltersList();
+            });
+            Minecraft.getInstance().setScreen(editorScreen);
+        } else {
+            // Edit existing filter
+            int filterIndex = filters.indexOf(filterToEdit);
+            if (filterIndex >= 0) {
+                FilterEntry filterCopy = new FilterEntry(filterToEdit);
+                FilterEditorScreen editorScreen = new FilterEditorScreen(this, filterCopy, index -> {
+                    // Update the filter when saved
+                    filters.set(filterIndex, filterCopy);
+                    refreshFiltersList();
+                });
+                Minecraft.getInstance().setScreen(editorScreen);
+            }
+        }
+    }
+    
+    /**
+     * Refreshes the list of filters displayed in the scrollable container
+     */
+    private void refreshFiltersList() {
+        filtersContainer.clearWidgets();
+        
+        if (filters.isEmpty()) {
+            return;
+        }
+        
+        int entryWidth = filtersContainer.getWidth() - 20; // Account for scrollbar
+        int index = 0;
+        
+        for (FilterEntry filter : filters) {
+            // Position relative to container's internal coordinate system
+            int spacing = FILTER_ITEM_HEIGHT + 5; // 25 + 5 = 30
+            int relativeY = 5 + (index * spacing);
+            int absoluteX = filtersContainer.getX();
+            int absoluteY = filtersContainer.getY() + relativeY;
+            
+            // Enable/disable toggle
+            final FilterEntry finalFilter = filter;
+            CycleButton<Boolean> toggleButton = CycleButton.<Boolean>builder(value ->
+                    Component.literal(value ? "✓" : "✗")
+                        .withStyle(value ? ChatFormatting.GREEN : ChatFormatting.RED))
+                .withValues(true, false)
+                .withInitialValue(filter.isEnabled())
+                .displayOnlyValue()
+                .create(absoluteX + 5, absoluteY, 20, 20,
+                        Component.empty(),
+                        (cycleButton, newValue) -> finalFilter.setEnabled(newValue));
+            
+            // Filter display button
+            Button filterButton = Button.builder(
+                    filter.getDisplayName(),
+                    button -> openFilterEditor(filter))
+                    .pos(absoluteX + 30, absoluteY)
+                    .size(entryWidth - 65, 20)
+                    .build();
+            
+            // Delete button
+            Button deleteButton = Button.builder(
+                    Component.literal("🗑").withStyle(ChatFormatting.RED),
+                    button -> {
+                        filters.remove(filter);
+                        refreshFiltersList();
+                    })
+                    .pos(absoluteX + entryWidth - 25, absoluteY)
+                    .size(20, 20)
+                    .build();
+            
+            filtersContainer.addWidget(toggleButton);
+            filtersContainer.addWidget(filterButton);
+            filtersContainer.addWidget(deleteButton);
+            
+            index++;
+        }
     }
 }

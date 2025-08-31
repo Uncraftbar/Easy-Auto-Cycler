@@ -8,6 +8,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
 import org.lwjgl.glfw.GLFW;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
+import com.uncraftbar.easyautocycler.gui.FilterListScreen;
 
 public class InputHandler {
 
@@ -23,11 +24,15 @@ public class InputHandler {
                 AutomationManager.INSTANCE.toggle();
                 return;
             }
-        }
-
-        if (Keybindings.openConfigKey != null && Keybindings.openConfigKey.consumeClick()) {
+        }        if (Keybindings.openConfigKey != null && Keybindings.openConfigKey.consumeClick()) {
             EasyAutoCyclerMod.LOGGER.info("--- Open Config Key Pressed! ---");
-            mc.setScreen(new ConfigScreen(currentScreen, Component.translatable("gui.easyautocycler.config.title")));
+            // Check if shift is being held to open the filter list instead
+            boolean shiftPressed = Screen.hasShiftDown();
+            if (shiftPressed) {                EasyAutoCyclerMod.LOGGER.info("Opening FilterListScreen due to Shift key");
+                mc.setScreen(new FilterListScreen(currentScreen));
+            } else {
+                mc.setScreen(new ConfigScreen(currentScreen, Component.translatable("gui.easyautocycler.config.title")));
+            }
             return;
         }
     }

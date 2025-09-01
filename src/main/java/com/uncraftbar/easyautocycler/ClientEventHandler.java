@@ -15,10 +15,10 @@ import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 
 public class ClientEventHandler {
 
-    private static final ResourceLocation CONFIG_BUTTON_NORMAL_RL = ResourceLocation.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/config_button.png");
-    private static final ResourceLocation CONFIG_BUTTON_HOVER_RL = ResourceLocation.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/config_button_highlighted.png");
-    private static final ResourceLocation PLAY_BUTTON_NORMAL_RL = ResourceLocation.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/play_button.png");
-    private static final ResourceLocation PLAY_BUTTON_HOVER_RL = ResourceLocation.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/play_button_highlighted.png");
+    private static final ResourceLocation CONFIG_BUTTON_NORMAL_RL = new ResourceLocation(EasyAutoCyclerMod.MODID, "gui/config_button.png");
+    private static final ResourceLocation CONFIG_BUTTON_HOVER_RL = new ResourceLocation(EasyAutoCyclerMod.MODID, "gui/config_button_highlighted.png");
+    private static final ResourceLocation PLAY_BUTTON_NORMAL_RL = new ResourceLocation(EasyAutoCyclerMod.MODID, "gui/play_button.png");
+    private static final ResourceLocation PLAY_BUTTON_HOVER_RL = new ResourceLocation(EasyAutoCyclerMod.MODID, "gui/play_button_highlighted.png");
 
     @SubscribeEvent
     public void onScreenInitPost(ScreenEvent.Init.Post event) {
@@ -31,7 +31,7 @@ public class ClientEventHandler {
             CustomImageButton configButton = new CustomImageButton( configButtonX, configButtonY, buttonWidth, buttonHeight, CONFIG_BUTTON_NORMAL_RL, CONFIG_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.config.tooltip"),
                     (button) -> {
                         EasyAutoCyclerMod.LOGGER.debug("Calling ConfigScreen.open from button.");
-                        ConfigScreen.open(merchantScreen);
+                        Minecraft.getInstance().setScreen(new ConfigScreen(merchantScreen, Component.translatable("gui.easyautocycler.config.title")));
                     }
             );
             CustomImageButton toggleButton = new CustomImageButton( toggleButtonX, toggleButtonY, buttonWidth, buttonHeight, PLAY_BUTTON_NORMAL_RL, PLAY_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.toggle.tooltip"), (button) -> { AutomationManager.INSTANCE.toggle(); } );

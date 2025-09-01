@@ -204,7 +204,7 @@ public class FilterListScreen extends Screen {
     
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        this.renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         
         // Render title
@@ -230,8 +230,8 @@ public class FilterListScreen extends Screen {
     }
     
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        return filtersContainer.mouseScrolled(mouseX, mouseY, scrollX, scrollY) || super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+        return filtersContainer.mouseScrolled(mouseX, mouseY, 0, scrollDelta) || super.mouseScrolled(mouseX, mouseY, scrollDelta);
     }
     
     @Override

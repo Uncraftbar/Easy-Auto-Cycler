@@ -76,7 +76,7 @@ public class SuggestingEditBox extends EditBox {
             for (String suggestion : suggestions) {
                 if (suggestion.equalsIgnoreCase(potentialCompletion)) {
                     this.setValue(suggestion); // Use the original case from suggestions
-                    this.moveCursorToEnd(false);
+                    this.moveCursorToEnd();
                     this.setHighlightPos(this.getCursorPosition());
                     updateSuggestions(suggestion);
                     if (onAcceptSuggestion != null) {

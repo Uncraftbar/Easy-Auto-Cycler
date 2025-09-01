@@ -116,16 +116,21 @@ public class ScrollableContainer extends AbstractWidget {
     }
     
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
         if (this.isHovered) {
             if (contentHeight > height) {
                 scrollOffset = Math.max(0, Math.min(contentHeight - height, 
-                    scrollOffset - (int)(scrollY * SCROLL_STEP)));
+                    scrollOffset - (int)(scrollDelta * SCROLL_STEP)));
                 return true;
             }
         }
         
         return false;
+    }
+    
+    // Keep the old signature for internal use
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        return mouseScrolled(mouseX, mouseY, scrollY);
     }
     
     @Override

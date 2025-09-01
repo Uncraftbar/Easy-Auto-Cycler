@@ -3,6 +3,7 @@ package com.uncraftbar.easyautocycler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.client.event.InputEvent;
 import org.lwjgl.glfw.GLFW;

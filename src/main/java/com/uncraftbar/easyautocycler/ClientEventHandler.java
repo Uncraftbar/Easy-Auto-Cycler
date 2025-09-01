@@ -15,10 +15,10 @@ import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 
 public class ClientEventHandler {
 
-    private static final ResourceLocation CONFIG_BUTTON_NORMAL_RL = new ResourceLocation(EasyAutoCyclerMod.MODID, "gui/config_button.png");
-    private static final ResourceLocation CONFIG_BUTTON_HOVER_RL = new ResourceLocation(EasyAutoCyclerMod.MODID, "gui/config_button_highlighted.png");
-    private static final ResourceLocation PLAY_BUTTON_NORMAL_RL = new ResourceLocation(EasyAutoCyclerMod.MODID, "gui/play_button.png");
-    private static final ResourceLocation PLAY_BUTTON_HOVER_RL = new ResourceLocation(EasyAutoCyclerMod.MODID, "gui/play_button_highlighted.png");
+    private static final ResourceLocation CONFIG_BUTTON_NORMAL_RL = ResourceLocation.tryParse(EasyAutoCyclerMod.MODID + ":gui/config_button.png");
+    private static final ResourceLocation CONFIG_BUTTON_HOVER_RL = ResourceLocation.tryParse(EasyAutoCyclerMod.MODID + ":gui/config_button_highlighted.png");
+    private static final ResourceLocation PLAY_BUTTON_NORMAL_RL = ResourceLocation.tryParse(EasyAutoCyclerMod.MODID + ":gui/play_button.png");
+    private static final ResourceLocation PLAY_BUTTON_HOVER_RL = ResourceLocation.tryParse(EasyAutoCyclerMod.MODID + ":gui/play_button_highlighted.png");
 
     @SubscribeEvent
     public void onScreenInitPost(ScreenEvent.Init.Post event) {

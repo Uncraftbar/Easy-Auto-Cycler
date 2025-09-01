@@ -27,7 +27,7 @@ public class InputHandler {
 
         if (Keybindings.openConfigKey != null && Keybindings.openConfigKey.consumeClick()) {
             EasyAutoCyclerMod.LOGGER.info("--- Open Config Key Pressed! ---");
-            ConfigScreen.open(currentScreen);
+            Minecraft.getInstance().setScreen(new ConfigScreen(currentScreen, Component.translatable("gui.easyautocycler.config.title")));
         }
     }
 }

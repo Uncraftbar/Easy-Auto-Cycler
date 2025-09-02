@@ -39,8 +39,8 @@ Create complex filter rules with multiple criteria, save them persistently, and 
 This repository now supports multiple Minecraft versions using a branch-based structure:
 
 - **`main`** - Latest stable version (currently NeoForge 1.21.1 with advanced filtering)
-- **`neoforge-1.21.1`** - NeoForge 1.21.1 with advanced filtering system
-- **`forge-1.20.1`** - Forge 1.20.1 with basic enchantment targeting (Easy Villagers only)
+- **`neoforge-1.21.1`** - NeoForge 1.21.1 with Advanced filtering and dual mod support (Easy Villagers OR Trade Cycling) 
+- **`forge-1.20.1`** - Forge 1.20.1 with Advanced filtering (Easy Villagers only)
 
 For version-specific downloads and releases, check the [Releases](https://github.com/Uncraftbar/Easy-Auto-Cycler/releases) page or browse branches.
 

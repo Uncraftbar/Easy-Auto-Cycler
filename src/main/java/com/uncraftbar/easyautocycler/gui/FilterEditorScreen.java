@@ -213,7 +213,7 @@ public class FilterEditorScreen extends Screen {
         // Validate and update enchantment ID
         String enchantmentIdStr = enchantmentIdInput.getValue().trim();
         if (!enchantmentIdStr.isEmpty()) {
-            try {                ResourceLocation enchantmentId = ResourceLocation.parse(enchantmentIdStr);
+            try {                ResourceLocation enchantmentId = new ResourceLocation(enchantmentIdStr);
                 Enchantment enchantment = Minecraft.getInstance().level.registryAccess()
                     .registryOrThrow(Registries.ENCHANTMENT)
                     .getOptional(enchantmentId)
@@ -254,7 +254,7 @@ public class FilterEditorScreen extends Screen {
         // Validate and update item ID
         String itemIdStr = itemIdInput.getValue().trim();
         if (!itemIdStr.isEmpty()) {
-            try {                ResourceLocation itemId = ResourceLocation.parse(itemIdStr);
+            try {                ResourceLocation itemId = new ResourceLocation(itemIdStr);
                 Item item = Minecraft.getInstance().level.registryAccess()
                     .registryOrThrow(Registries.ITEM)
                     .getOptional(itemId)
@@ -296,7 +296,7 @@ public class FilterEditorScreen extends Screen {
         String paymentItemStr = paymentItemInput.getValue().trim();
         if (!paymentItemStr.isEmpty()) {
             try {
-                ResourceLocation paymentItemId = ResourceLocation.parse(paymentItemStr);
+                ResourceLocation paymentItemId = new ResourceLocation(paymentItemStr);
                 Item paymentItem = Minecraft.getInstance().level.registryAccess()
                     .registryOrThrow(Registries.ITEM)
                     .getOptional(paymentItemId)

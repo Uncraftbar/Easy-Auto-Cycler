@@ -32,6 +32,7 @@ public class EasyAutoCyclerMod {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("Common setup");
+        AutomationManager.initialize();
     }
 
     private void clientSetup(final FMLClientSetupEvent event) {

@@ -213,7 +213,7 @@ public class FilterEditorScreen extends Screen {
         // Validate and update enchantment ID
         String enchantmentIdStr = enchantmentIdInput.getValue().trim();
         if (!enchantmentIdStr.isEmpty()) {
-            try {                ResourceLocation enchantmentId = new ResourceLocation(enchantmentIdStr);
+            try {                ResourceLocation enchantmentId = ResourceLocation.parse(enchantmentIdStr);
                 Enchantment enchantment = Minecraft.getInstance().level.registryAccess()
                     .registryOrThrow(Registries.ENCHANTMENT)
                     .getOptional(enchantmentId)
@@ -254,7 +254,7 @@ public class FilterEditorScreen extends Screen {
         // Validate and update item ID
         String itemIdStr = itemIdInput.getValue().trim();
         if (!itemIdStr.isEmpty()) {
-            try {                ResourceLocation itemId = new ResourceLocation(itemIdStr);
+            try {                ResourceLocation itemId = ResourceLocation.parse(itemIdStr);
                 Item item = Minecraft.getInstance().level.registryAccess()
                     .registryOrThrow(Registries.ITEM)
                     .getOptional(itemId)
@@ -296,7 +296,7 @@ public class FilterEditorScreen extends Screen {
         String paymentItemStr = paymentItemInput.getValue().trim();
         if (!paymentItemStr.isEmpty()) {
             try {
-                ResourceLocation paymentItemId = new ResourceLocation(paymentItemStr);
+                ResourceLocation paymentItemId = ResourceLocation.parse(paymentItemStr);
                 Item paymentItem = Minecraft.getInstance().level.registryAccess()
                     .registryOrThrow(Registries.ITEM)
                     .getOptional(paymentItemId)
@@ -354,7 +354,7 @@ public class FilterEditorScreen extends Screen {
     }
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         
         // Draw title

@@ -115,7 +115,7 @@ public class FilterConfig {
             
             if (data.itemId != null && !data.itemId.isEmpty()) {
                 try {
-                    filter.setItemId(new ResourceLocation(data.itemId));
+                    filter.setItemId(ResourceLocation.parse(data.itemId));
                 } catch (Exception e) {
                     EasyAutoCyclerMod.LOGGER.warn("Invalid item ID in config: {}", data.itemId);
                 }
@@ -123,7 +123,7 @@ public class FilterConfig {
             
             if (data.enchantmentId != null && !data.enchantmentId.isEmpty()) {
                 try {
-                    filter.setEnchantmentId(new ResourceLocation(data.enchantmentId));
+                    filter.setEnchantmentId(ResourceLocation.parse(data.enchantmentId));
                 } catch (Exception e) {
                     EasyAutoCyclerMod.LOGGER.warn("Invalid enchantment ID in config: {}", data.enchantmentId);
                 }
@@ -131,7 +131,7 @@ public class FilterConfig {
             
             if (data.paymentItemId != null && !data.paymentItemId.isEmpty()) {
                 try {
-                    filter.setPaymentItemId(new ResourceLocation(data.paymentItemId));
+                    filter.setPaymentItemId(ResourceLocation.parse(data.paymentItemId));
                 } catch (Exception e) {
                     EasyAutoCyclerMod.LOGGER.warn("Invalid payment item ID in config: {}", data.paymentItemId);
                 }

@@ -23,6 +23,7 @@ A powerful client-side Minecraft mod that automates villager trade cycling. Set 
 |--------|--------|------------|----------------|
 | [`neoforge-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-1.21.1) | NeoForge | 1.21.1 | Easy Villagers, Trade Cycling |
 | [`forge-1.20.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/forge-1.20.1) | Forge | 1.20.1 | Easy Villagers, Trade Cycling |
+| [`fabric-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-1.21.1) | Fabric | 1.21.1 | Trade Cycling |
 | [`fabric-1.20.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-1.20.1) | Fabric | 1.20.1 | Trade Cycling |
 
 > **Note:** Easy Villagers is Forge/NeoForge only. Fabric builds support Trade Cycling only.

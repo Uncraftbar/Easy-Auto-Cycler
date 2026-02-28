@@ -18,6 +18,9 @@ public class ClientEventHandler {
 
     public static void onScreenInit(Minecraft client, Screen screen, int scaledWidth, int scaledHeight) {
         if (screen instanceof MerchantScreen merchantScreen) {
+            if (!AutomationManager.INSTANCE.canCycleTrades(merchantScreen.getMenu())) {
+                return;
+            }
             EasyAutoCyclerMod.LOGGER.debug("MerchantScreen opened. Adding custom image buttons...");
             int leftPos = (merchantScreen.width - 276) / 2; int topPos = (merchantScreen.height - 166) / 2; int buttonWidth = 18; int buttonHeight = 18; int buttonPadding = 2; int cycleButtonPosX = leftPos + 107; int cycleButtonPosY = topPos + 8; int cycleButtonHeight = 14; int configButtonX = cycleButtonPosX; int configButtonY = cycleButtonPosY + cycleButtonHeight + buttonPadding; int toggleButtonX = cycleButtonPosX; int toggleButtonY = configButtonY + buttonHeight + buttonPadding;
 

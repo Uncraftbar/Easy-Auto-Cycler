@@ -2,7 +2,7 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
-import com.uncraftbar.easyautocycler.mixin.ScreenAccessorMixin;
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
@@ -29,11 +29,8 @@ public class ClientEventHandler {
             );
             CustomImageButton toggleButton = new CustomImageButton( toggleButtonX, toggleButtonY, buttonWidth, buttonHeight, PLAY_BUTTON_NORMAL_RL, PLAY_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.toggle.tooltip"), (button) -> { AutomationManager.INSTANCE.toggle(); } );
 
-            ScreenAccessorMixin accessor = (ScreenAccessorMixin) screen;
-            accessor.getChildren().add(configButton);
-            accessor.getRenderables().add(configButton);
-            accessor.getChildren().add(toggleButton);
-            accessor.getRenderables().add(toggleButton);
+            Screens.getButtons(screen).add(configButton);
+            Screens.getButtons(screen).add(toggleButton);
             EasyAutoCyclerMod.LOGGER.debug("Added Config and Toggle custom image buttons to MerchantScreen.");
         }
     }

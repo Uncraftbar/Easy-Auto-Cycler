@@ -442,7 +442,7 @@ public class AutomationManager {
      * Check if cycling is possible using whichever trading mod is loaded.
      * Prioritizes Easy Villagers over Trade Cycling if both are present.
      */
-    private boolean canCycleTrades(MerchantMenu menu) {
+    public boolean canCycleTrades(MerchantMenu menu) {
         if (!initialized) return false;
 
         if (easyVillagersLoaded && easyVillagersHandler != null) {

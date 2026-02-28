@@ -2,33 +2,33 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.filter.FilterEntry;
 import com.uncraftbar.easyautocycler.config.FilterConfig;
-import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 
 import org.jetbrains.annotations.Nullable;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -54,11 +54,13 @@ public class AutomationManager {
     // Reflection-based handler for Trade Cycling
     private static class TradeCyclingHandler {
         private final Method canCycleMethod;
-        private static final ResourceLocation CYCLE_TRADES_PACKET = new ResourceLocation("trade_cycling", "cycle_trades");
+        private final Constructor<?> packetConstructor;
 
         public TradeCyclingHandler() throws Exception {
             Class<?> buttonClass = Class.forName("de.maxhenkel.tradecycling.gui.CycleTradesButton");
             canCycleMethod = buttonClass.getMethod("canCycle", MerchantMenu.class);
+            Class<?> packetClass = Class.forName("de.maxhenkel.tradecycling.net.CycleTradesPacket");
+            packetConstructor = packetClass.getDeclaredConstructor();
         }
 
         public boolean canCycle(MerchantMenu menu) {
@@ -72,12 +74,9 @@ public class AutomationManager {
 
         public void sendCyclePacket() {
             try {
-                FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
-                ClientPacketListener connection = Minecraft.getInstance().getConnection();
-                if (connection != null) {
-                    connection.send(new ServerboundCustomPayloadPacket(CYCLE_TRADES_PACKET, buffer));
-                    EasyAutoCyclerMod.LOGGER.trace("Sent Trade Cycling cycle packet");
-                }
+                Object packet = packetConstructor.newInstance();
+                ClientPlayNetworking.send((CustomPacketPayload) packet);
+                EasyAutoCyclerMod.LOGGER.trace("Sent Trade Cycling cycle packet");
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send Trade Cycling packet", e);
             }
@@ -421,18 +420,33 @@ public class AutomationManager {
                 continue; 
             }
             
-            // Check for enchantments using EnchantmentHelper (1.20.1 compatible)
             boolean foundMatchingEnchantment = false;
-            
-            Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(resultStack);
-            if (!enchantments.isEmpty()) {
-                for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
-                    Enchantment ench = entry.getKey();
-                    int level = entry.getValue();
-                    if (ench.equals(this.targetEnchantment) && level == this.targetLevel) { 
-                        foundMatchingEnchantment = true; 
-                        break; 
-                    } 
+
+            // Check stored enchantments (books)
+            if (resultStack.is(Items.ENCHANTED_BOOK)) {
+                ItemEnchantments storedEnchantments = resultStack.get(DataComponents.STORED_ENCHANTMENTS);
+                if (storedEnchantments != null && !storedEnchantments.isEmpty()) {
+                    for (Holder<Enchantment> enchHolder : storedEnchantments.keySet()) {
+                        Enchantment ench = enchHolder.value();
+                        int level = storedEnchantments.getLevel(enchHolder);
+                        if (ench.equals(this.targetEnchantment) && level == this.targetLevel) {
+                            foundMatchingEnchantment = true;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // Check regular enchantments
+                ItemEnchantments enchantments = resultStack.get(DataComponents.ENCHANTMENTS);
+                if (enchantments != null && !enchantments.isEmpty()) {
+                    for (Holder<Enchantment> enchHolder : enchantments.keySet()) {
+                        Enchantment ench = enchHolder.value();
+                        int level = enchantments.getLevel(enchHolder);
+                        if (ench.equals(this.targetEnchantment) && level == this.targetLevel) {
+                            foundMatchingEnchantment = true;
+                            break;
+                        }
+                    }
                 }
             }
             
@@ -529,7 +543,7 @@ public class AutomationManager {
     }
     
     /**
-     * Check trades against a single filter (adapted for 1.20.1)
+     * Check trades against a single filter
      */
     private boolean checkTradeWithFilter(MerchantOffers offers, FilterEntry filter) {
         for (MerchantOffer offer : offers) {
@@ -585,7 +599,7 @@ public class AutomationManager {
                 }
             }
             
-            // Check enchantment condition if specified (adapted for 1.20.1)
+            // Check enchantment condition if specified
             if (filter.getEnchantmentId() != null) {
                 Enchantment targetEnchant = Minecraft.getInstance().level.registryAccess()
                     .registryOrThrow(Registries.ENCHANTMENT)
@@ -596,16 +610,32 @@ public class AutomationManager {
                 
                 boolean foundEnchantment = false;
                 
-                // Check enchantments using EnchantmentHelper (1.20.1 compatible)
-                Map<Enchantment, Integer> enchantments = EnchantmentHelper.getEnchantments(resultStack);
-                if (!enchantments.isEmpty()) {
-                    for (Map.Entry<Enchantment, Integer> entry : enchantments.entrySet()) {
-                        Enchantment ench = entry.getKey();
-                        int level = entry.getValue();
-                        
-                        if (ench.equals(targetEnchant) && level >= filter.getEnchantmentLevel()) {
-                            foundEnchantment = true;
-                            break;
+                // Check stored enchantments (books)
+                if (resultStack.is(Items.ENCHANTED_BOOK)) {
+                    ItemEnchantments storedEnchantments = resultStack.get(DataComponents.STORED_ENCHANTMENTS);
+                    if (storedEnchantments != null && !storedEnchantments.isEmpty()) {
+                        for (Holder<Enchantment> enchHolder : storedEnchantments.keySet()) {
+                            Enchantment ench = enchHolder.value();
+                            int level = storedEnchantments.getLevel(enchHolder);
+                            if (ench.equals(targetEnchant) && level >= filter.getEnchantmentLevel()) {
+                                foundEnchantment = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Check regular enchantments
+                if (!foundEnchantment) {
+                    ItemEnchantments enchantments = resultStack.get(DataComponents.ENCHANTMENTS);
+                    if (enchantments != null && !enchantments.isEmpty()) {
+                        for (Holder<Enchantment> enchHolder : enchantments.keySet()) {
+                            Enchantment ench = enchHolder.value();
+                            int level = enchantments.getLevel(enchHolder);
+                            if (ench.equals(targetEnchant) && level >= filter.getEnchantmentLevel()) {
+                                foundEnchantment = true;
+                                break;
+                            }
                         }
                     }
                 }

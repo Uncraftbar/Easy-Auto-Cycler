@@ -22,11 +22,9 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
-import net.minecraftforge.fml.ModList;
+import net.fabricmc.loader.api.FabricLoader;
 
-import javax.annotation.Nullable;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
+import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,52 +48,8 @@ public class AutomationManager {
 
     // Mod integration state
     private static boolean initialized = false;
-    private static boolean easyVillagersLoaded = false;
     private static boolean tradeCyclingLoaded = false;
-    private static Object easyVillagersHandler = null;
     private static Object tradeCyclingHandler = null;
-
-    // Reflection-based handler for Easy Villagers
-    private static class EasyVillagersHandler {
-        private final Method canCycleMethod;
-        private final Field channelField;
-        private final Constructor<?> messageConstructor;
-        private Method sendToServerMethod;
-
-        public EasyVillagersHandler() throws Exception {
-            Class<?> buttonClass = Class.forName("de.maxhenkel.easyvillagers.gui.CycleTradesButton");
-            canCycleMethod = buttonClass.getMethod("canCycle", MerchantMenu.class);
-
-            Class<?> mainClass = Class.forName("de.maxhenkel.easyvillagers.Main");
-            channelField = mainClass.getField("SIMPLE_CHANNEL");
-
-            Class<?> messageClass = Class.forName("de.maxhenkel.easyvillagers.net.MessageCycleTrades");
-            messageConstructor = messageClass.getDeclaredConstructor();
-        }
-
-        public boolean canCycle(MerchantMenu menu) {
-            try {
-                return (boolean) canCycleMethod.invoke(null, menu);
-            } catch (Exception e) {
-                EasyAutoCyclerMod.LOGGER.error("Error calling Easy Villagers canCycle", e);
-                return false;
-            }
-        }
-
-        public void sendCyclePacket() {
-            try {
-                Object channel = channelField.get(null);
-                Object message = messageConstructor.newInstance();
-                if (sendToServerMethod == null) {
-                    sendToServerMethod = channel.getClass().getMethod("sendToServer", Object.class);
-                }
-                sendToServerMethod.invoke(channel, message);
-                EasyAutoCyclerMod.LOGGER.trace("Sent Easy Villagers cycle packet");
-            } catch (Exception e) {
-                EasyAutoCyclerMod.LOGGER.error("Failed to send Easy Villagers packet", e);
-            }
-        }
-    }
 
     // Reflection-based handler for Trade Cycling
     private static class TradeCyclingHandler {
@@ -137,21 +91,9 @@ public class AutomationManager {
         if (initialized) return;
         initialized = true;
 
-        easyVillagersLoaded = ModList.get().isLoaded("easy_villagers");
-        tradeCyclingLoaded = ModList.get().isLoaded("trade_cycling");
+        tradeCyclingLoaded = FabricLoader.getInstance().isModLoaded("trade_cycling");
 
-        EasyAutoCyclerMod.LOGGER.info("Easy Villagers mod is {}", easyVillagersLoaded ? "loaded" : "not loaded");
         EasyAutoCyclerMod.LOGGER.info("Trade Cycling mod is {}", tradeCyclingLoaded ? "loaded" : "not loaded");
-
-        if (easyVillagersLoaded) {
-            try {
-                easyVillagersHandler = new EasyVillagersHandler();
-                EasyAutoCyclerMod.LOGGER.info("Easy Villagers support enabled");
-            } catch (Exception e) {
-                easyVillagersLoaded = false;
-                EasyAutoCyclerMod.LOGGER.error("Failed to initialize Easy Villagers support: {}", e.getMessage());
-            }
-        }
 
         if (tradeCyclingLoaded) {
             try {
@@ -163,8 +105,8 @@ public class AutomationManager {
             }
         }
 
-        if (!easyVillagersLoaded && !tradeCyclingLoaded) {
-            EasyAutoCyclerMod.LOGGER.warn("No supported trading mods detected! This mod requires either Easy Villagers or Trade Cycling.");
+        if (!tradeCyclingLoaded) {
+            EasyAutoCyclerMod.LOGGER.warn("Trade Cycling mod not detected! This mod requires Trade Cycling to function.");
         }
     }
 
@@ -322,9 +264,9 @@ public class AutomationManager {
             return; 
         }
 
-        if (!initialized || (!easyVillagersLoaded && !tradeCyclingLoaded)) {
-            this.sendMessageToPlayer(Component.literal("Error: No supported trading mod detected (Easy Villagers or Trade Cycling).").withStyle(ChatFormatting.RED));
-            EasyAutoCyclerMod.LOGGER.error("Cannot start: No trading mod loaded.");
+        if (!initialized || !tradeCyclingLoaded) {
+            this.sendMessageToPlayer(Component.literal("Error: Trade Cycling mod not detected.").withStyle(ChatFormatting.RED));
+            EasyAutoCyclerMod.LOGGER.error("Cannot start: Trade Cycling mod not loaded.");
             return;
         }
         
@@ -445,9 +387,7 @@ public class AutomationManager {
     private boolean canCycleTrades(MerchantMenu menu) {
         if (!initialized) return false;
 
-        if (easyVillagersLoaded && easyVillagersHandler != null) {
-            return ((EasyVillagersHandler) easyVillagersHandler).canCycle(menu);
-        } else if (tradeCyclingLoaded && tradeCyclingHandler != null) {
+        if (tradeCyclingLoaded && tradeCyclingHandler != null) {
             return ((TradeCyclingHandler) tradeCyclingHandler).canCycle(menu);
         }
 
@@ -455,12 +395,10 @@ public class AutomationManager {
     }
 
     /**
-     * Send the cycle trades packet using whichever trading mod is loaded.
+     * Send the cycle trades packet using Trade Cycling.
      */
     private void sendCyclePacket() {
-        if (easyVillagersLoaded && easyVillagersHandler != null) {
-            ((EasyVillagersHandler) easyVillagersHandler).sendCyclePacket();
-        } else if (tradeCyclingLoaded && tradeCyclingHandler != null) {
+        if (tradeCyclingLoaded && tradeCyclingHandler != null) {
             ((TradeCyclingHandler) tradeCyclingHandler).sendCyclePacket();
         }
     }

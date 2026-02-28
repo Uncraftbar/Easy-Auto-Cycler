@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.uncraftbar.easyautocycler.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "ScreenAccessorMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

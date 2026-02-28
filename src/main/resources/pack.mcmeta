@@ -1,8 +1,6 @@
 {
   "pack": {
-    "description": {
-      "text": "${mod_id} resources"
-    },
+    "description": "easyautocycler resources",
     "pack_format": 15
   }
 }

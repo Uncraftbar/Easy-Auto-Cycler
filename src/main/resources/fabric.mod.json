@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "easyautocycler",
+  "version": "${version}",
+  "name": "Easy Auto Cycler",
+  "description": "A client-side mod that adds advanced filtering and automation to trade cycling.",
+  "authors": [
+    "Uncraftbar"
+  ],
+  "contact": {
+    "sources": "https://github.com/Uncraftbar/Easy-Auto-Cycler"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.uncraftbar.easyautocycler.EasyAutoCyclerMod"
+    ]
+  },
+  "mixins": [
+    "easyautocycler.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "minecraft": "~1.20.1",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "trade_cycling": "*"
+  }
+}

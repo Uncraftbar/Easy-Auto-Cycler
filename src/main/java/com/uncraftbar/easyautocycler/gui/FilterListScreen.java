@@ -10,7 +10,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -2,27 +2,32 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.filter.FilterEntry;
 import com.uncraftbar.easyautocycler.config.FilterConfig;
+import io.netty.buffer.Unpooled;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ServerboundCustomPayloadPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
-
-import de.maxhenkel.easyvillagers.Main;
-import de.maxhenkel.easyvillagers.gui.CycleTradesButton;
-import de.maxhenkel.easyvillagers.net.MessageCycleTrades;
+import net.minecraftforge.fml.ModList;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +47,126 @@ public class AutomationManager {
     private int delayTicks = 0;
     private int currentCycles = 0;
     private static final int MAX_CYCLES_SAFETY = 3000;
+
+    // Mod integration state
+    private static boolean initialized = false;
+    private static boolean easyVillagersLoaded = false;
+    private static boolean tradeCyclingLoaded = false;
+    private static Object easyVillagersHandler = null;
+    private static Object tradeCyclingHandler = null;
+
+    // Reflection-based handler for Easy Villagers
+    private static class EasyVillagersHandler {
+        private final Method canCycleMethod;
+        private final Field channelField;
+        private final Constructor<?> messageConstructor;
+        private Method sendToServerMethod;
+
+        public EasyVillagersHandler() throws Exception {
+            Class<?> buttonClass = Class.forName("de.maxhenkel.easyvillagers.gui.CycleTradesButton");
+            canCycleMethod = buttonClass.getMethod("canCycle", MerchantMenu.class);
+
+            Class<?> mainClass = Class.forName("de.maxhenkel.easyvillagers.Main");
+            channelField = mainClass.getField("SIMPLE_CHANNEL");
+
+            Class<?> messageClass = Class.forName("de.maxhenkel.easyvillagers.net.MessageCycleTrades");
+            messageConstructor = messageClass.getDeclaredConstructor();
+        }
+
+        public boolean canCycle(MerchantMenu menu) {
+            try {
+                return (boolean) canCycleMethod.invoke(null, menu);
+            } catch (Exception e) {
+                EasyAutoCyclerMod.LOGGER.error("Error calling Easy Villagers canCycle", e);
+                return false;
+            }
+        }
+
+        public void sendCyclePacket() {
+            try {
+                Object channel = channelField.get(null);
+                Object message = messageConstructor.newInstance();
+                if (sendToServerMethod == null) {
+                    sendToServerMethod = channel.getClass().getMethod("sendToServer", Object.class);
+                }
+                sendToServerMethod.invoke(channel, message);
+                EasyAutoCyclerMod.LOGGER.trace("Sent Easy Villagers cycle packet");
+            } catch (Exception e) {
+                EasyAutoCyclerMod.LOGGER.error("Failed to send Easy Villagers packet", e);
+            }
+        }
+    }
+
+    // Reflection-based handler for Trade Cycling
+    private static class TradeCyclingHandler {
+        private final Method canCycleMethod;
+        private static final ResourceLocation CYCLE_TRADES_PACKET = new ResourceLocation("trade_cycling", "cycle_trades");
+
+        public TradeCyclingHandler() throws Exception {
+            Class<?> buttonClass = Class.forName("de.maxhenkel.tradecycling.gui.CycleTradesButton");
+            canCycleMethod = buttonClass.getMethod("canCycle", MerchantMenu.class);
+        }
+
+        public boolean canCycle(MerchantMenu menu) {
+            try {
+                return (boolean) canCycleMethod.invoke(null, menu);
+            } catch (Exception e) {
+                EasyAutoCyclerMod.LOGGER.error("Error calling Trade Cycling canCycle", e);
+                return false;
+            }
+        }
+
+        public void sendCyclePacket() {
+            try {
+                FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+                ClientPacketListener connection = Minecraft.getInstance().getConnection();
+                if (connection != null) {
+                    connection.send(new ServerboundCustomPayloadPacket(CYCLE_TRADES_PACKET, buffer));
+                    EasyAutoCyclerMod.LOGGER.trace("Sent Trade Cycling cycle packet");
+                }
+            } catch (Exception e) {
+                EasyAutoCyclerMod.LOGGER.error("Failed to send Trade Cycling packet", e);
+            }
+        }
+    }
+
+    /**
+     * Initialize mod integration handlers. Call during mod setup, not in static initializer.
+     */
+    public static void initialize() {
+        if (initialized) return;
+        initialized = true;
+
+        easyVillagersLoaded = ModList.get().isLoaded("easy_villagers");
+        tradeCyclingLoaded = ModList.get().isLoaded("trade_cycling");
+
+        EasyAutoCyclerMod.LOGGER.info("Easy Villagers mod is {}", easyVillagersLoaded ? "loaded" : "not loaded");
+        EasyAutoCyclerMod.LOGGER.info("Trade Cycling mod is {}", tradeCyclingLoaded ? "loaded" : "not loaded");
+
+        if (easyVillagersLoaded) {
+            try {
+                easyVillagersHandler = new EasyVillagersHandler();
+                EasyAutoCyclerMod.LOGGER.info("Easy Villagers support enabled");
+            } catch (Exception e) {
+                easyVillagersLoaded = false;
+                EasyAutoCyclerMod.LOGGER.error("Failed to initialize Easy Villagers support: {}", e.getMessage());
+            }
+        }
+
+        if (tradeCyclingLoaded) {
+            try {
+                tradeCyclingHandler = new TradeCyclingHandler();
+                EasyAutoCyclerMod.LOGGER.info("Trade Cycling support enabled");
+            } catch (Exception e) {
+                tradeCyclingLoaded = false;
+                EasyAutoCyclerMod.LOGGER.error("Failed to initialize Trade Cycling support: {}", e.getMessage());
+            }
+        }
+
+        if (!easyVillagersLoaded && !tradeCyclingLoaded) {
+            EasyAutoCyclerMod.LOGGER.warn("No supported trading mods detected! This mod requires either Easy Villagers or Trade Cycling.");
+        }
+    }
 
     public static final int DEFAULT_CLICK_DELAY = 2;
     public static final int MIN_CLICK_DELAY = 1;
@@ -196,6 +321,12 @@ public class AutomationManager {
             EasyAutoCyclerMod.LOGGER.warn("Cannot start: Screen check failed. Screen was: {}", screenName); 
             return; 
         }
+
+        if (!initialized || (!easyVillagersLoaded && !tradeCyclingLoaded)) {
+            this.sendMessageToPlayer(Component.literal("Error: No supported trading mod detected (Easy Villagers or Trade Cycling).").withStyle(ChatFormatting.RED));
+            EasyAutoCyclerMod.LOGGER.error("Cannot start: No trading mod loaded.");
+            return;
+        }
         
         // Check if we have any filters
         migrateOldConfigToFilters();
@@ -293,11 +424,10 @@ public class AutomationManager {
             }
         }
         
-        // Direct Easy Villagers integration (no reflection needed)
-        if (CycleTradesButton.canCycle(screen.getMenu())) {
+        if (canCycleTrades(screen.getMenu())) {
             try {
                 EasyAutoCyclerMod.LOGGER.trace("Conditions met, sending cycle trades packet (Cycle {})", currentCycles);
-                Main.SIMPLE_CHANNEL.sendToServer(new MessageCycleTrades());
+                sendCyclePacket();
                 delayTicks = this.clickDelay;
             } catch(Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send cycle trades packet!", e);
@@ -305,6 +435,33 @@ public class AutomationManager {
             }
         } else {
             EasyAutoCyclerMod.LOGGER.trace("canCycle() returned false, waiting...");
+        }
+    }
+
+    /**
+     * Check if cycling is possible using whichever trading mod is loaded.
+     * Prioritizes Easy Villagers over Trade Cycling if both are present.
+     */
+    private boolean canCycleTrades(MerchantMenu menu) {
+        if (!initialized) return false;
+
+        if (easyVillagersLoaded && easyVillagersHandler != null) {
+            return ((EasyVillagersHandler) easyVillagersHandler).canCycle(menu);
+        } else if (tradeCyclingLoaded && tradeCyclingHandler != null) {
+            return ((TradeCyclingHandler) tradeCyclingHandler).canCycle(menu);
+        }
+
+        return false;
+    }
+
+    /**
+     * Send the cycle trades packet using whichever trading mod is loaded.
+     */
+    private void sendCyclePacket() {
+        if (easyVillagersLoaded && easyVillagersHandler != null) {
+            ((EasyVillagersHandler) easyVillagersHandler).sendCyclePacket();
+        } else if (tradeCyclingLoaded && tradeCyclingHandler != null) {
+            ((TradeCyclingHandler) tradeCyclingHandler).sendCyclePacket();
         }
     }
 

@@ -25,6 +25,9 @@ public class ClientEventHandler {
         Screen screen = event.getScreen();
 
         if (screen instanceof MerchantScreen merchantScreen) {
+            if (!AutomationManager.INSTANCE.canCycle(merchantScreen.getMenu())) {
+                return;
+            }
             EasyAutoCyclerMod.LOGGER.debug("MerchantScreen opened. Adding custom image buttons (Static Toggle Icon)...");
 
             int leftPos = (merchantScreen.width - 276) / 2;

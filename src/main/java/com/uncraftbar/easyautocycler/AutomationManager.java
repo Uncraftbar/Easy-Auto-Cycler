@@ -357,7 +357,7 @@ public class AutomationManager {
     }
 
     // Simplified canCycle method using handlers
-    private boolean canCycle(AbstractContainerMenu menu) {
+    public boolean canCycle(AbstractContainerMenu menu) {
         if (!initialized) return false;
         
         if (!(menu instanceof MerchantMenu merchantMenu)) {

@@ -41,6 +41,9 @@ public class ConfigScreen extends Screen {
     // Filter system components
     private ScrollableContainer filtersContainer;
     private List<FilterEntry> filters = new ArrayList<>();
+    private final List<FilterEntry> originalFilters = new ArrayList<>();
+    private boolean originalMatchAny;
+    private int originalDelay;
     private CycleButton<Boolean> matchModeCycleButton;
     private boolean matchAny = true;
 
@@ -60,6 +63,10 @@ public class ConfigScreen extends Screen {
         
         // Load current filter data
         this.filters.addAll(AutomationManager.INSTANCE.getFilterEntries());
+        this.originalFilters.clear();
+        this.originalFilters.addAll(this.filters.stream().map(FilterEntry::new).collect(java.util.stream.Collectors.toList()));
+        this.originalMatchAny = AutomationManager.INSTANCE.isMatchAny();
+        this.originalDelay = AutomationManager.INSTANCE.getClickDelay();
         this.matchAny = AutomationManager.INSTANCE.isMatchAny();
     }
 
@@ -230,8 +237,8 @@ public class ConfigScreen extends Screen {
         }
 
         // Save all filters to the AutomationManager
-        AutomationManager.INSTANCE.setFilterEntries(filters);
         AutomationManager.INSTANCE.setMatchAny(matchModeCycleButton.getValue());
+        AutomationManager.INSTANCE.setFilterEntries(filters);
         
         this.sendMessageToPlayer(Component.literal("Configuration saved!").withStyle(ChatFormatting.GREEN));
         this.onClose();
@@ -239,18 +246,17 @@ public class ConfigScreen extends Screen {
 
 
     private void onClear(Button button) {
-        AutomationManager.INSTANCE.clearTarget();
         int defaultDelay = AutomationManager.DEFAULT_CLICK_DELAY;
-        AutomationManager.INSTANCE.configureSpeed(defaultDelay);
 
-        // Clear all filters
+        // Clear only local/UI state. Persistence happens on Save.
         filters.clear();
         refreshFiltersList();
-        
-        // Reset delay button
-        if(this.delayCycleButton != null) this.delayCycleButton.setValue(defaultDelay);
-        
-        this.sendMessageToPlayer(Component.literal("Configuration cleared!").withStyle(ChatFormatting.YELLOW));
+
+        // Reset UI controls
+        if (this.matchModeCycleButton != null) this.matchModeCycleButton.setValue(true);
+        if (this.delayCycleButton != null) this.delayCycleButton.setValue(defaultDelay);
+
+        this.sendMessageToPlayer(Component.literal("Configuration cleared (unsaved).").withStyle(ChatFormatting.YELLOW));
     }
 
     private void sendMessageToPlayer(Component message) { 
@@ -260,6 +266,11 @@ public class ConfigScreen extends Screen {
     }
     
     @Override public void onClose() { 
+        // Revert runtime state if user exits without saving.
+        AutomationManager.INSTANCE.setMatchAny(this.originalMatchAny);
+        AutomationManager.INSTANCE.setFilterEntries(this.originalFilters.stream().map(FilterEntry::new).collect(java.util.stream.Collectors.toList()));
+        AutomationManager.INSTANCE.configureSpeed(this.originalDelay);
+
         if (this.minecraft != null) { 
             this.minecraft.setScreen(this.previousScreen); 
         } 

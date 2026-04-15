@@ -36,6 +36,7 @@ public class ConfigScreen extends Screen {
     private int originalDelay;
     private CycleButton<Boolean> matchModeCycleButton;
     private boolean matchAny = true;
+    private boolean saved = false;
 
     private static final int PADDING = 6;
     private static final int BUTTON_HEIGHT = 20;
@@ -190,14 +191,14 @@ public class ConfigScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         super.extractRenderState(graphics, mouseX, mouseY, a);
         int titleX = this.width / 2 - this.font.width(this.title) / 2;
-        graphics.text(this.font, this.title, titleX, PADDING * 2, 0xFFFFFF, true);
+        graphics.text(this.font, this.title, titleX, PADDING * 2, -1, true);
 
         if (filters.isEmpty()) {
             Component noFiltersMsg = Component.translatable("gui.easyautocycler.filters.no_filters")
                     .withStyle(ChatFormatting.GRAY);
             int msgX = this.width / 2 - this.font.width(noFiltersMsg) / 2;
             int msgY = PADDING * 4 + 10 + BUTTON_HEIGHT + PADDING + 30;
-            graphics.text(this.font, noFiltersMsg, msgX, msgY, 0xAAAAAA, true);
+            graphics.text(this.font, noFiltersMsg, msgX, msgY, 0xFFAAAAAA, true);
         }
 
         int hiddenCount = filters.size() - visibleFilterCount();
@@ -206,7 +207,7 @@ public class ConfigScreen extends Screen {
                     .withStyle(ChatFormatting.GRAY);
             int msgX = this.width / 2 - this.font.width(moreMsg) / 2;
             int msgY = this.delayCycleButton.getY() - 14;
-            graphics.text(this.font, moreMsg, msgX, msgY, 0xAAAAAA, true);
+            graphics.text(this.font, moreMsg, msgX, msgY, 0xFFAAAAAA, true);
         }
     }
 
@@ -229,6 +230,7 @@ public class ConfigScreen extends Screen {
         AutomationManager.INSTANCE.setMatchAny(matchModeCycleButton.getValue());
         AutomationManager.INSTANCE.setFilterEntries(filters);
 
+        this.saved = true;
         this.sendMessageToPlayer(Component.literal("Configuration saved!").withStyle(ChatFormatting.GREEN));
         this.onClose();
     }
@@ -252,9 +254,11 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void onClose() {
-        AutomationManager.INSTANCE.setMatchAny(this.originalMatchAny);
-        AutomationManager.INSTANCE.setFilterEntries(this.originalFilters.stream().map(FilterEntry::new).collect(Collectors.toList()));
-        AutomationManager.INSTANCE.configureSpeed(this.originalDelay);
+        if (!this.saved) {
+            AutomationManager.INSTANCE.setMatchAny(this.originalMatchAny);
+            AutomationManager.INSTANCE.setFilterEntries(this.originalFilters.stream().map(FilterEntry::new).collect(Collectors.toList()));
+            AutomationManager.INSTANCE.configureSpeed(this.originalDelay);
+        }
 
         if (this.minecraft != null) {
             this.minecraft.setScreen(this.previousScreen);

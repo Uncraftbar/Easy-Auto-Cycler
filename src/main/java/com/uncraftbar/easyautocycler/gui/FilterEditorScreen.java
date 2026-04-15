@@ -249,7 +249,7 @@ public class FilterEditorScreen extends Screen {
         super.extractRenderState(graphics, mouseX, mouseY, a);
 
         int titleX = this.width / 2 - this.font.width(this.title) / 2;
-        graphics.text(this.font, this.title, titleX, PADDING, 0xFFFFFF, true);
+        graphics.text(this.font, this.title, titleX, PADDING, -1, true);
 
         int left = (this.width - INPUT_WIDTH) / 2;
         int offset = PADDING * 2;
@@ -263,19 +263,19 @@ public class FilterEditorScreen extends Screen {
                 "gui.easyautocycler.filter.max_price"
         };
         for (String key : labels) {
-            graphics.text(this.font, Component.translatable(key), left, offset, 0xFFFFFF, true);
+            graphics.text(this.font, Component.translatable(key), left, offset, -1, true);
             offset += INPUT_HEIGHT + PADDING;
         }
 
         int statusY = this.height - PADDING * 2 - BUTTON_HEIGHT - 15;
         if (!statusText.getString().isEmpty()) {
             int statusX = this.width / 2 - this.font.width(statusText) / 2;
-            graphics.text(this.font, statusText, statusX, statusY, hasError ? 0xFF5555 : 0x55FF55, true);
+            graphics.text(this.font, statusText, statusX, statusY, hasError ? 0xFFFF5555 : 0xFF55FF55, true);
         } else {
             Component helpText = Component.translatable("gui.easyautocycler.filter.help")
                     .withStyle(ChatFormatting.GRAY);
             int helpX = this.width / 2 - this.font.width(helpText) / 2;
-            graphics.text(this.font, helpText, helpX, statusY, 0xAAAAAA, true);
+            graphics.text(this.font, helpText, helpX, statusY, 0xFFAAAAAA, true);
         }
     }
 

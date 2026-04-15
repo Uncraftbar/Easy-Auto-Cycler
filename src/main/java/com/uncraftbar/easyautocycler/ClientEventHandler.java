@@ -13,20 +13,16 @@ import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public class ClientEventHandler {
 
-    private static final Identifier CONFIG_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/config_button.png");
-    private static final Identifier CONFIG_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/config_button_highlighted.png");
-    private static final Identifier PLAY_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/play_button.png");
-    private static final Identifier PLAY_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/play_button_highlighted.png");
+    private static final Identifier CONFIG_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/config_button.png");
+    private static final Identifier CONFIG_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/config_button_highlighted.png");
+    private static final Identifier PLAY_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/play_button.png");
+    private static final Identifier PLAY_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/play_button_highlighted.png");
 
     @SubscribeEvent
     public void onScreenInitPost(ScreenEvent.Init.Post event) {
         Screen screen = event.getScreen();
 
         if (screen instanceof MerchantScreen merchantScreen) {
-            if (!AutomationManager.INSTANCE.canCycle(merchantScreen.getMenu())) {
-                return;
-            }
-
             int leftPos = (merchantScreen.width - 276) / 2;
             int topPos = (merchantScreen.height - 166) / 2;
             int buttonWidth = 18;

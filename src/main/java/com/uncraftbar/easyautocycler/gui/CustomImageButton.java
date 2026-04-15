@@ -9,7 +9,6 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.ARGB;
 
 public class CustomImageButton extends AbstractButton {
 
@@ -31,18 +30,17 @@ public class CustomImageButton extends AbstractButton {
     @Override
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         Identifier texture = this.isHovered() && this.active ? this.textureHover : this.textureNormal;
-        float brightness = this.active ? 1.0F : 0.5F;
-        int color = ARGB.color((int) (this.alpha * 255),
-                (int) (brightness * 255),
-                (int) (brightness * 255),
-                (int) (brightness * 255));
+
+        // Background fill so the button area is always visible — texture failing to load on a
+        // given resource pack shouldn't leave an invisible click target.
+        int bgColor = this.isHovered() && this.active ? 0xFF555555 : 0xFF333333;
+        graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, bgColor);
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, texture,
                 this.getX(), this.getY(),
                 0.0F, 0.0F,
                 this.width, this.height,
-                this.width, this.height,
-                color);
+                this.width, this.height);
 
         if (this.isHovered() && this.active) {
             graphics.setTooltipForNextFrame(this.tooltip, mouseX, mouseY);

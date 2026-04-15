@@ -12,16 +12,13 @@ import net.minecraft.resources.Identifier;
 
 public class ClientEventHandler {
 
-    private static final Identifier CONFIG_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/config_button.png");
-    private static final Identifier CONFIG_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/config_button_highlighted.png");
-    private static final Identifier PLAY_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/play_button.png");
-    private static final Identifier PLAY_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "gui/play_button_highlighted.png");
+    private static final Identifier CONFIG_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/config_button.png");
+    private static final Identifier CONFIG_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/config_button_highlighted.png");
+    private static final Identifier PLAY_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/play_button.png");
+    private static final Identifier PLAY_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/play_button_highlighted.png");
 
     public static void onScreenInit(Minecraft client, Screen screen, int scaledWidth, int scaledHeight) {
         if (!(screen instanceof MerchantScreen merchantScreen)) {
-            return;
-        }
-        if (!AutomationManager.INSTANCE.canCycleTrades(merchantScreen.getMenu())) {
             return;
         }
 

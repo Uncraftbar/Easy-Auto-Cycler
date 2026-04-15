@@ -176,13 +176,13 @@ public class FilterListScreen extends Screen {
         super.extractRenderState(graphics, mouseX, mouseY, a);
 
         int titleX = this.width / 2 - this.font.width(this.title) / 2;
-        graphics.text(this.font, this.title, titleX, PADDING / 2, 0xFFFFFF, true);
+        graphics.text(this.font, this.title, titleX, PADDING / 2, -1, true);
 
         if (filters.isEmpty()) {
             Component noFiltersMsg = Component.translatable("gui.easyautocycler.filters.no_filters")
                     .withStyle(ChatFormatting.GRAY);
             int msgX = this.width / 2 - this.font.width(noFiltersMsg) / 2;
-            graphics.text(this.font, noFiltersMsg, msgX, this.height / 2 - 10, 0xAAAAAA, true);
+            graphics.text(this.font, noFiltersMsg, msgX, this.height / 2 - 10, 0xFFAAAAAA, true);
         }
     }
 

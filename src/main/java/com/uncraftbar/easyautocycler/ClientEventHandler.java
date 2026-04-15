@@ -2,6 +2,7 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -52,5 +53,13 @@ public class ClientEventHandler {
 
         Screens.getWidgets(screen).add(configButton);
         Screens.getWidgets(screen).add(toggleButton);
+
+        // The toggle keybind doesn't fire through KeyMapping.consumeClick() while a Screen is
+        // open, so hook the screen's key-press event directly for MerchantScreen.
+        ScreenKeyboardEvents.beforeKeyPress(screen).register((s, event) -> {
+            if (Keybindings.toggleAutoTradeKey != null && Keybindings.toggleAutoTradeKey.matches(event)) {
+                AutomationManager.INSTANCE.toggle();
+            }
+        });
     }
 }

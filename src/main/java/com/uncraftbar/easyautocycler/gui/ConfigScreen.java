@@ -8,12 +8,10 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.Item;
 import net.minecraft.client.Minecraft;
 import net.minecraft.ChatFormatting;
 import java.util.List;
@@ -75,16 +73,21 @@ public class ConfigScreen extends Screen {
         super.init();
         if (this.minecraft == null || this.minecraft.player == null || this.minecraft.level == null) { this.onClose(); return; }
 
-        // Load suggestions for enchantments and items
         try {
-            Registry<Enchantment> enchantmentRegistry = this.minecraft.level.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-            this.enchantmentSuggestions = enchantmentRegistry.keySet().stream().map(ResourceLocation::toString).sorted().collect(Collectors.toList());
-            
-            Registry<Item> itemRegistry = this.minecraft.level.registryAccess().registryOrThrow(Registries.ITEM);
-            this.itemSuggestions = itemRegistry.keySet().stream().map(ResourceLocation::toString).sorted().collect(Collectors.toList());
-        } catch (Exception e) { 
-            EasyAutoCyclerMod.LOGGER.error("Failed to load registry for suggestions", e); 
-            this.enchantmentSuggestions = List.of(); 
+            this.enchantmentSuggestions = this.minecraft.level.registryAccess()
+                    .lookupOrThrow(Registries.ENCHANTMENT)
+                    .listElementIds()
+                    .map(k -> k.location().toString())
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            this.itemSuggestions = BuiltInRegistries.ITEM.keySet().stream()
+                    .map(ResourceLocation::toString)
+                    .sorted()
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            EasyAutoCyclerMod.LOGGER.error("Failed to load registry for suggestions", e);
+            this.enchantmentSuggestions = List.of();
             this.itemSuggestions = List.of();
         }        int contentWidth = 300; // Wider to accommodate filters
         int guiLeft = (this.width - contentWidth) / 2; 

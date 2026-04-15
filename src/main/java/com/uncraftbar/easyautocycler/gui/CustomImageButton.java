@@ -1,11 +1,10 @@
 package com.uncraftbar.easyautocycler.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -36,19 +35,18 @@ public class CustomImageButton extends AbstractButton {
         Minecraft mc = Minecraft.getInstance();
         ResourceLocation texture = this.isHovered() && this.active ? this.textureHover : this.textureNormal;
 
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, texture);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, this.alpha);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.enableDepthTest();
-
         float colorMult = this.active ? 1.0F : 0.5F;
-        RenderSystem.setShaderColor(colorMult, colorMult, colorMult, this.alpha);
+        int argb = ((int) (this.alpha * 255) << 24)
+                | ((int) (colorMult * 255) << 16)
+                | ((int) (colorMult * 255) << 8)
+                | (int) (colorMult * 255);
 
-        guiGraphics.blit(texture, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
-
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        guiGraphics.blit(RenderType::guiTextured, texture,
+                this.getX(), this.getY(),
+                0.0F, 0.0F,
+                this.width, this.height,
+                this.width, this.height,
+                argb);
 
         if (this.isHovered() && this.active) {
             guiGraphics.renderTooltip(mc.font, this.tooltip, mouseX, mouseY);
@@ -57,14 +55,14 @@ public class CustomImageButton extends AbstractButton {
 
     @Override
     public void onPress() {
-        if(this.active) {
+        if (this.active) {
             this.onPress.onPress(this);
         }
     }
 
     @Override
     public void playDownSound(net.minecraft.client.sounds.SoundManager handler) {
-        if(this.active) {
+        if (this.active) {
             handler.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         }
     }
@@ -75,5 +73,7 @@ public class CustomImageButton extends AbstractButton {
     }
 
     @FunctionalInterface
-    public interface OnPress { void onPress(CustomImageButton button); }
+    public interface OnPress {
+        void onPress(CustomImageButton button);
+    }
 }

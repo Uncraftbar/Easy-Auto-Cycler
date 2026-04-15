@@ -6,10 +6,10 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 
@@ -184,23 +184,18 @@ public class FilterEditorScreen extends Screen {
      */
     private void initSuggestions() {
         try {
-            // Get enchantment suggestions
             enchantmentSuggestions = Minecraft.getInstance().level.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .keySet().stream()
-                .map(ResourceLocation::toString)
-                .sorted()
-                .collect(Collectors.toList());
-            
-            // Get item suggestions
-            itemSuggestions = Minecraft.getInstance().level.registryAccess()
-                .registryOrThrow(Registries.ITEM)
-                .keySet().stream()
-                .map(ResourceLocation::toString)
-                .sorted()
-                .collect(Collectors.toList());
+                    .lookupOrThrow(Registries.ENCHANTMENT)
+                    .listElementIds()
+                    .map(k -> k.location().toString())
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            itemSuggestions = BuiltInRegistries.ITEM.keySet().stream()
+                    .map(ResourceLocation::toString)
+                    .sorted()
+                    .collect(Collectors.toList());
         } catch (Exception e) {
-            // Handle potential exceptions when accessing registries
             enchantmentSuggestions = List.of();
             itemSuggestions = List.of();
         }
@@ -210,20 +205,20 @@ public class FilterEditorScreen extends Screen {
      * Save the filter if it's valid
      */
     private void saveFilter() {
-        // Validate and update enchantment ID
         String enchantmentIdStr = enchantmentIdInput.getValue().trim();
         if (!enchantmentIdStr.isEmpty()) {
-            try {                ResourceLocation enchantmentId = ResourceLocation.parse(enchantmentIdStr);
-                Enchantment enchantment = Minecraft.getInstance().level.registryAccess()
-                    .registryOrThrow(Registries.ENCHANTMENT)
-                    .getOptional(enchantmentId)
-                    .orElse(null);
-                
-                if (enchantment == null) {
+            try {
+                ResourceLocation enchantmentId = ResourceLocation.parse(enchantmentIdStr);
+                boolean exists = Minecraft.getInstance().level.registryAccess()
+                        .lookupOrThrow(Registries.ENCHANTMENT)
+                        .get(ResourceKey.create(Registries.ENCHANTMENT, enchantmentId))
+                        .isPresent();
+
+                if (!exists) {
                     setError(Component.translatable("gui.easyautocycler.filter.error.invalid_enchantment_id", enchantmentIdStr));
                     return;
                 }
-                
+
                 filter.setEnchantmentId(enchantmentId);
             } catch (Exception e) {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_enchantment_id", enchantmentIdStr));
@@ -251,20 +246,15 @@ public class FilterEditorScreen extends Screen {
             filter.setEnchantmentLevel(1);
         }
         
-        // Validate and update item ID
         String itemIdStr = itemIdInput.getValue().trim();
         if (!itemIdStr.isEmpty()) {
-            try {                ResourceLocation itemId = ResourceLocation.parse(itemIdStr);
-                Item item = Minecraft.getInstance().level.registryAccess()
-                    .registryOrThrow(Registries.ITEM)
-                    .getOptional(itemId)
-                    .orElse(null);
-                
-                if (item == null) {
+            try {
+                ResourceLocation itemId = ResourceLocation.parse(itemIdStr);
+                if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
                     setError(Component.translatable("gui.easyautocycler.filter.error.invalid_item_id", itemIdStr));
                     return;
                 }
-                
+
                 filter.setItemId(itemId);
             } catch (Exception e) {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_item_id", itemIdStr));
@@ -292,28 +282,22 @@ public class FilterEditorScreen extends Screen {
             filter.setMinCount(1);
         }
         
-        // Validate and update payment item
         String paymentItemStr = paymentItemInput.getValue().trim();
         if (!paymentItemStr.isEmpty()) {
             try {
                 ResourceLocation paymentItemId = ResourceLocation.parse(paymentItemStr);
-                Item paymentItem = Minecraft.getInstance().level.registryAccess()
-                    .registryOrThrow(Registries.ITEM)
-                    .getOptional(paymentItemId)
-                    .orElse(null);
-                
-                if (paymentItem == null) {
+                if (!BuiltInRegistries.ITEM.containsKey(paymentItemId)) {
                     setError(Component.translatable("gui.easyautocycler.filter.error.invalid_payment_item", paymentItemStr));
                     return;
                 }
-                
+
                 filter.setPaymentItemId(paymentItemId);
             } catch (Exception e) {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_payment_item", paymentItemStr));
                 return;
             }
         } else {
-            filter.setPaymentItemId(null); // null = emeralds (default)
+            filter.setPaymentItemId(null);
         }
         
         // Validate and update maximum price

@@ -2,15 +2,18 @@ package com.uncraftbar.easyautocycler;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import org.lwjgl.glfw.GLFW;
 
 public class Keybindings {
 
-    public static final String KEY_CATEGORY_AUTO_TRADER = "key.category.easyautocycler";
     public static final String KEY_TOGGLE_AUTO_TRADE = "key.easyautocycler.toggle_auto_trade";
     public static final String KEY_OPEN_CONFIG = "key.easyautocycler.open_config";
+
+    public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
+            Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "auto_cycler"));
 
     public static KeyMapping toggleAutoTradeKey;
     public static KeyMapping openConfigKey;
@@ -21,7 +24,7 @@ public class Keybindings {
                 KeyConflictContext.GUI,
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_R,
-                KEY_CATEGORY_AUTO_TRADER
+                CATEGORY
         );
         event.register(toggleAutoTradeKey);
 
@@ -30,7 +33,7 @@ public class Keybindings {
                 KeyConflictContext.IN_GAME,
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_C,
-                KEY_CATEGORY_AUTO_TRADER
+                CATEGORY
         );
         event.register(openConfigKey);
 

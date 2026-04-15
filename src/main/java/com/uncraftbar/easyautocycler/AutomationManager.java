@@ -11,7 +11,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MerchantMenu;
@@ -23,7 +23,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Constructor;
@@ -54,8 +54,8 @@ public class AutomationManager {
     public static final int MODE_ITEM = 1;
     private int cycleMode = MODE_ENCHANTMENT;
 
-    @Nullable private ResourceLocation targetEnchantmentId = null;
-    @Nullable private ResourceLocation targetItemId = null;
+    @Nullable private Identifier targetEnchantmentId = null;
+    @Nullable private Identifier targetItemId = null;
     private int maxEmeraldCost = 64;
     private int targetLevel = 1;
     private int clickDelay = DEFAULT_CLICK_DELAY;
@@ -94,7 +94,7 @@ public class AutomationManager {
         public void sendCyclePacket() {
             try {
                 Object packet = packetConstructor.newInstance();
-                PacketDistributor.sendToServer((CustomPacketPayload) packet);
+                ClientPacketDistributor.sendToServer((CustomPacketPayload) packet);
                 EasyAutoCyclerMod.LOGGER.trace("Sent Easy Villagers cycle packet");
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send Easy Villagers packet", e);
@@ -125,7 +125,7 @@ public class AutomationManager {
         public void sendCyclePacket() {
             try {
                 Object packet = packetConstructor.newInstance();
-                PacketDistributor.sendToServer((CustomPacketPayload) packet);
+                ClientPacketDistributor.sendToServer((CustomPacketPayload) packet);
                 EasyAutoCyclerMod.LOGGER.trace("Sent Trade Cycling cycle packet");
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send Trade Cycling packet", e);
@@ -171,15 +171,15 @@ public class AutomationManager {
     private AutomationManager() {}
 
     public boolean isRunning() { return isRunning.get(); }
-    @Nullable public ResourceLocation getTargetEnchantmentId() { return targetEnchantmentId; }
-    @Nullable public ResourceLocation getTargetItemId() { return targetItemId; }
+    @Nullable public Identifier getTargetEnchantmentId() { return targetEnchantmentId; }
+    @Nullable public Identifier getTargetItemId() { return targetItemId; }
     public int getMaxEmeraldCost() { return maxEmeraldCost; }
     public int getTargetLevel() { return targetLevel; }
     public int getClickDelay() { return clickDelay; }
     public int getCycleMode() { return cycleMode; }
     public int getTargetItemCount() { return targetItemCount; }
 
-    public void configureTarget(ResourceLocation enchantmentId, int level, int emeraldCost) {
+    public void configureTarget(Identifier enchantmentId, int level, int emeraldCost) {
         this.targetEnchantmentId = enchantmentId;
         this.targetLevel = level;
         this.maxEmeraldCost = emeraldCost;
@@ -194,7 +194,7 @@ public class AutomationManager {
         this.filterEntries.add(entry);
     }
 
-    public void configureTargetItem(ResourceLocation itemId, int itemCount, int emeraldCost) {
+    public void configureTargetItem(Identifier itemId, int itemCount, int emeraldCost) {
         this.targetItemId = itemId;
         this.targetItemCount = itemCount;
         this.maxEmeraldCost = emeraldCost;
@@ -434,7 +434,7 @@ public class AutomationManager {
         for (MerchantOffer offer : offers) {
             ItemStack resultStack = offer.getResult();
 
-            ResourceLocation itemIdInStack = BuiltInRegistries.ITEM.getKey(resultStack.getItem());
+            Identifier itemIdInStack = BuiltInRegistries.ITEM.getKey(resultStack.getItem());
             if (!itemIdInStack.equals(targetItemId)) continue;
 
             if (offer.isOutOfStock()) continue;
@@ -523,7 +523,7 @@ public class AutomationManager {
             if (!priceMatches) continue;
 
             if (filter.getItemId() != null) {
-                ResourceLocation itemIdInStack = BuiltInRegistries.ITEM.getKey(resultStack.getItem());
+                Identifier itemIdInStack = BuiltInRegistries.ITEM.getKey(resultStack.getItem());
                 if (!itemIdInStack.equals(filter.getItemId())) continue;
                 if (resultStack.getCount() < filter.getMinCount()) continue;
             }
@@ -541,10 +541,10 @@ public class AutomationManager {
     }
 
     /**
-     * Compares a stack's enchantments by ResourceLocation rather than resolving the Enchantment value —
+     * Compares a stack's enchantments by Identifier rather than resolving the Enchantment value —
      * works cleanly on 1.21.2+ where Enchantment is data-driven and only accessible via Holders.
      */
-    private boolean matchesEnchantmentOnStack(ItemStack stack, ResourceLocation targetId, int requiredLevel, boolean exactLevel) {
+    private boolean matchesEnchantmentOnStack(ItemStack stack, Identifier targetId, int requiredLevel, boolean exactLevel) {
         if (stack.is(Items.ENCHANTED_BOOK)) {
             ItemEnchantments stored = stack.get(DataComponents.STORED_ENCHANTMENTS);
             if (stored != null && !stored.isEmpty() && enchantmentsMatch(stored, targetId, requiredLevel, exactLevel)) {
@@ -558,9 +558,9 @@ public class AutomationManager {
         return false;
     }
 
-    private boolean enchantmentsMatch(ItemEnchantments enchantments, ResourceLocation targetId, int requiredLevel, boolean exactLevel) {
+    private boolean enchantmentsMatch(ItemEnchantments enchantments, Identifier targetId, int requiredLevel, boolean exactLevel) {
         for (Holder<Enchantment> enchHolder : enchantments.keySet()) {
-            ResourceLocation holderId = enchHolder.unwrapKey().map(k -> k.location()).orElse(null);
+            Identifier holderId = enchHolder.unwrapKey().map(k -> k.identifier()).orElse(null);
             if (holderId == null || !holderId.equals(targetId)) continue;
             int level = enchantments.getLevel(enchHolder);
             if (exactLevel ? (level == requiredLevel) : (level >= requiredLevel)) return true;

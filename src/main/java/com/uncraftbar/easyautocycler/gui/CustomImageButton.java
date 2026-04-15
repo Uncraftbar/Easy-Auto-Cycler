@@ -1,24 +1,25 @@
 package com.uncraftbar.easyautocycler.gui;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.input.InputWithModifiers;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.ARGB;
 
 public class CustomImageButton extends AbstractButton {
 
-    private final ResourceLocation textureNormal;
-    private final ResourceLocation textureHover;
+    private final Identifier textureNormal;
+    private final Identifier textureHover;
     private final OnPress onPress;
     private final Component tooltip;
 
     public CustomImageButton(int x, int y, int width, int height,
-                             ResourceLocation textureNormal, ResourceLocation textureHover,
+                             Identifier textureNormal, Identifier textureHover,
                              Component tooltip, OnPress onPress) {
         super(x, y, width, height, Component.empty());
         this.textureNormal = textureNormal;
@@ -28,33 +29,28 @@ public class CustomImageButton extends AbstractButton {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        if (!this.visible) {
-            return;
-        }
-        Minecraft mc = Minecraft.getInstance();
-        ResourceLocation texture = this.isHovered() && this.active ? this.textureHover : this.textureNormal;
+    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        Identifier texture = this.isHovered() && this.active ? this.textureHover : this.textureNormal;
+        float brightness = this.active ? 1.0F : 0.5F;
+        int color = ARGB.color((int) (this.alpha * 255),
+                (int) (brightness * 255),
+                (int) (brightness * 255),
+                (int) (brightness * 255));
 
-        float colorMult = this.active ? 1.0F : 0.5F;
-        int argb = ((int) (this.alpha * 255) << 24)
-                | ((int) (colorMult * 255) << 16)
-                | ((int) (colorMult * 255) << 8)
-                | (int) (colorMult * 255);
-
-        guiGraphics.blit(RenderType::guiTextured, texture,
+        graphics.blit(RenderPipelines.GUI_TEXTURED, texture,
                 this.getX(), this.getY(),
                 0.0F, 0.0F,
                 this.width, this.height,
                 this.width, this.height,
-                argb);
+                color);
 
         if (this.isHovered() && this.active) {
-            guiGraphics.renderTooltip(mc.font, this.tooltip, mouseX, mouseY);
+            graphics.setTooltipForNextFrame(this.tooltip, mouseX, mouseY);
         }
     }
 
     @Override
-    public void onPress() {
+    public void onPress(InputWithModifiers input) {
         if (this.active) {
             this.onPress.onPress(this);
         }

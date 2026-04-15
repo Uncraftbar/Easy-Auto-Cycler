@@ -3,7 +3,7 @@ package com.uncraftbar.easyautocycler.filter;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Represents a single filter entry in the automated trade cycling system.
@@ -13,15 +13,15 @@ public class FilterEntry {
     private boolean enabled = true;
     
     // Item-related criteria
-    private ResourceLocation itemId;
+    private Identifier itemId;
     private int minCount = 1;
     
     // Enchantment-related criteria
-    private ResourceLocation enchantmentId;
+    private Identifier enchantmentId;
     private int enchantmentLevel = 1;
     
     // Payment criteria
-    private ResourceLocation paymentItemId; // null = emeralds (default)
+    private Identifier paymentItemId; // null = emeralds (default)
     private int maxPrice = 64;
 
     public FilterEntry() {
@@ -50,11 +50,11 @@ public class FilterEntry {
         this.enabled = enabled;
     }
 
-    public ResourceLocation getItemId() {
+    public Identifier getItemId() {
         return itemId;
     }
 
-    public void setItemId(ResourceLocation itemId) {
+    public void setItemId(Identifier itemId) {
         this.itemId = itemId;
     }
 
@@ -66,11 +66,11 @@ public class FilterEntry {
         this.minCount = minCount;
     }
 
-    public ResourceLocation getEnchantmentId() {
+    public Identifier getEnchantmentId() {
         return enchantmentId;
     }
 
-    public void setEnchantmentId(ResourceLocation enchantmentId) {
+    public void setEnchantmentId(Identifier enchantmentId) {
         this.enchantmentId = enchantmentId;
     }
 
@@ -82,11 +82,11 @@ public class FilterEntry {
         this.enchantmentLevel = enchantmentLevel;
     }
 
-    public ResourceLocation getPaymentItemId() {
+    public Identifier getPaymentItemId() {
         return paymentItemId;
     }
 
-    public void setPaymentItemId(ResourceLocation paymentItemId) {
+    public void setPaymentItemId(Identifier paymentItemId) {
         this.paymentItemId = paymentItemId;
     }
 

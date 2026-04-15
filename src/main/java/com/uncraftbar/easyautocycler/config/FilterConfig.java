@@ -8,7 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.uncraftbar.easyautocycler.EasyAutoCyclerMod;
 import com.uncraftbar.easyautocycler.filter.FilterEntry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.io.File;
 import java.io.FileReader;
@@ -115,7 +115,7 @@ public class FilterConfig {
             
             if (data.itemId != null && !data.itemId.isEmpty()) {
                 try {
-                    filter.setItemId(ResourceLocation.parse(data.itemId));
+                    filter.setItemId(Identifier.parse(data.itemId));
                 } catch (Exception e) {
                     EasyAutoCyclerMod.LOGGER.warn("Invalid item ID in config: {}", data.itemId);
                 }
@@ -123,7 +123,7 @@ public class FilterConfig {
             
             if (data.enchantmentId != null && !data.enchantmentId.isEmpty()) {
                 try {
-                    filter.setEnchantmentId(ResourceLocation.parse(data.enchantmentId));
+                    filter.setEnchantmentId(Identifier.parse(data.enchantmentId));
                 } catch (Exception e) {
                     EasyAutoCyclerMod.LOGGER.warn("Invalid enchantment ID in config: {}", data.enchantmentId);
                 }
@@ -131,7 +131,7 @@ public class FilterConfig {
             
             if (data.paymentItemId != null && !data.paymentItemId.isEmpty()) {
                 try {
-                    filter.setPaymentItemId(ResourceLocation.parse(data.paymentItemId));
+                    filter.setPaymentItemId(Identifier.parse(data.paymentItemId));
                 } catch (Exception e) {
                     EasyAutoCyclerMod.LOGGER.warn("Invalid payment item ID in config: {}", data.paymentItemId);
                 }

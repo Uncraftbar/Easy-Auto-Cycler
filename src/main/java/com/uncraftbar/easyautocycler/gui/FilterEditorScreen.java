@@ -1,22 +1,21 @@
 package com.uncraftbar.easyautocycler.gui;
 
 import com.uncraftbar.easyautocycler.filter.FilterEntry;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import org.jspecify.annotations.Nullable;
 
-import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Screen for editing an individual filter entry
@@ -27,8 +26,9 @@ public class FilterEditorScreen extends Screen {
     private final Screen previousScreen;
     private final FilterEntry filter;
     private final Consumer<Integer> onSave;
-    
-    // UI Components
+    private final List<String> enchantmentSuggestions;
+    private final List<String> itemSuggestions;
+
     private SuggestingEditBox enchantmentIdInput;
     private SuggestingEditBox itemIdInput;
     private EditBox enchantmentLevelInput;
@@ -37,193 +37,108 @@ public class FilterEditorScreen extends Screen {
     private EditBox maxPriceInput;
     private Component statusText = Component.empty();
     private boolean hasError = false;
-    
-    // Suggestions for autocomplete
-    private List<String> enchantmentSuggestions = List.of();
-    private List<String> itemSuggestions = List.of();
-      private static final int PADDING = 10;
+
+    private static final int PADDING = 10;
     private static final int INPUT_HEIGHT = 20;
     private static final int BUTTON_HEIGHT = 20;
     private static final int INPUT_WIDTH = 220;
-    
-    public FilterEditorScreen(@Nullable Screen previousScreen, FilterEntry filter, Consumer<Integer> onSave) {
+
+    public FilterEditorScreen(@Nullable Screen previousScreen, FilterEntry filter,
+                              List<String> enchantmentSuggestions, List<String> itemSuggestions,
+                              Consumer<Integer> onSave) {
         super(Component.translatable("gui.easyautocycler.filter.title"));
         this.previousScreen = previousScreen;
         this.filter = filter;
         this.onSave = onSave;
+        this.enchantmentSuggestions = enchantmentSuggestions;
+        this.itemSuggestions = itemSuggestions;
     }
-    
+
     @Override
     protected void init() {
         super.init();
-        
-        // Initialize suggestions for autocomplete
-        initSuggestions();
-        
+
         int left = (this.width - INPUT_WIDTH) / 2;
-        int yPos = PADDING * 3;        // Enchantment ID input
+        int yPos = PADDING * 3;
+
         enchantmentIdInput = new SuggestingEditBox(
-            this.font, 
-            left, 
-            yPos, 
-            INPUT_WIDTH, 
-            INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.filter.enchantment_id"),
-            enchantmentSuggestions,
-            (text) -> {});
-        
+                this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                Component.translatable("gui.easyautocycler.filter.enchantment_id"),
+                enchantmentSuggestions);
         enchantmentIdInput.setMaxLength(256);
         if (filter.getEnchantmentId() != null) {
             enchantmentIdInput.setValue(filter.getEnchantmentId().toString());
         }
         this.addRenderableWidget(enchantmentIdInput);
-        
-        // Enchantment Level input
+
         yPos += INPUT_HEIGHT + PADDING;
-        
-        enchantmentLevelInput = new EditBox(
-            this.font, 
-            left, 
-            yPos, 
-            INPUT_WIDTH, 
-            INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.filter.enchantment_level"));
-        
+        enchantmentLevelInput = new EditBox(this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                Component.translatable("gui.easyautocycler.filter.enchantment_level"));
         enchantmentLevelInput.setValue(String.valueOf(filter.getEnchantmentLevel()));
         this.addRenderableWidget(enchantmentLevelInput);
-        
-        // Item ID input
+
         yPos += INPUT_HEIGHT + PADDING;
-        
         itemIdInput = new SuggestingEditBox(
-            this.font, 
-            left, 
-            yPos, 
-            INPUT_WIDTH, 
-            INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.filter.item_id"),
-            itemSuggestions,
-            (text) -> {});
-        
+                this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                Component.translatable("gui.easyautocycler.filter.item_id"),
+                itemSuggestions);
         itemIdInput.setMaxLength(256);
         if (filter.getItemId() != null) {
             itemIdInput.setValue(filter.getItemId().toString());
         }
         this.addRenderableWidget(itemIdInput);
-        
-        // Min Count input
+
         yPos += INPUT_HEIGHT + PADDING;
-        
-        minCountInput = new EditBox(
-            this.font, 
-            left, 
-            yPos, 
-            INPUT_WIDTH, 
-            INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.filter.min_count"));
-        
+        minCountInput = new EditBox(this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                Component.translatable("gui.easyautocycler.filter.min_count"));
         minCountInput.setValue(String.valueOf(filter.getMinCount()));
         this.addRenderableWidget(minCountInput);
-        
-        // Payment Item input
+
         yPos += INPUT_HEIGHT + PADDING;
-        
         paymentItemInput = new SuggestingEditBox(
-            this.font, 
-            left, 
-            yPos, 
-            INPUT_WIDTH, 
-            INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.filter.payment_item"),
-            itemSuggestions,
-            (text) -> {});
-        
+                this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                Component.translatable("gui.easyautocycler.filter.payment_item"),
+                itemSuggestions);
         paymentItemInput.setMaxLength(256);
         if (filter.getPaymentItemId() != null) {
             paymentItemInput.setValue(filter.getPaymentItemId().toString());
         }
         this.addRenderableWidget(paymentItemInput);
-        
-        // Max Price input
+
         yPos += INPUT_HEIGHT + PADDING;
-        
-        maxPriceInput = new EditBox(
-            this.font, 
-            left, 
-            yPos, 
-            INPUT_WIDTH, 
-            INPUT_HEIGHT, 
-            Component.translatable("gui.easyautocycler.filter.max_price"));
-        
+        maxPriceInput = new EditBox(this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                Component.translatable("gui.easyautocycler.filter.max_price"));
         maxPriceInput.setValue(String.valueOf(filter.getMaxPrice()));
         this.addRenderableWidget(maxPriceInput);
-        
-        // Bottom buttons
+
         int bottomY = this.height - PADDING - BUTTON_HEIGHT;
         int buttonWidth = 100;
-        
-        // Save button
+
         this.addRenderableWidget(Button.builder(
-            Component.translatable("gui.easyautocycler.filter.save"),
-            button -> saveFilter())
-            .pos(left, bottomY)
-            .size(buttonWidth, BUTTON_HEIGHT)
-            .build());
-        
-        // Cancel button
+                        Component.translatable("gui.easyautocycler.filter.save"),
+                        button -> saveFilter())
+                .pos(left, bottomY).size(buttonWidth, BUTTON_HEIGHT).build());
+
         this.addRenderableWidget(Button.builder(
-            Component.translatable("gui.easyautocycler.filter.cancel"),
-            button -> onClose())
-            .pos(left + INPUT_WIDTH - buttonWidth, bottomY)
-            .size(buttonWidth, BUTTON_HEIGHT)
-            .build());
+                        Component.translatable("gui.easyautocycler.filter.cancel"),
+                        button -> onClose())
+                .pos(left + INPUT_WIDTH - buttonWidth, bottomY).size(buttonWidth, BUTTON_HEIGHT).build());
     }
-    
-    /**
-     * Initialize suggestion lists for enchantment and item IDs
-     */
-    private void initSuggestions() {
-        try {
-            // Get enchantment suggestions
-            enchantmentSuggestions = Minecraft.getInstance().level.registryAccess()
-                .registryOrThrow(Registries.ENCHANTMENT)
-                .keySet().stream()
-                .map(ResourceLocation::toString)
-                .sorted()
-                .collect(Collectors.toList());
-            
-            // Get item suggestions
-            itemSuggestions = Minecraft.getInstance().level.registryAccess()
-                .registryOrThrow(Registries.ITEM)
-                .keySet().stream()
-                .map(ResourceLocation::toString)
-                .sorted()
-                .collect(Collectors.toList());
-        } catch (Exception e) {
-            // Handle potential exceptions when accessing registries
-            enchantmentSuggestions = List.of();
-            itemSuggestions = List.of();
-        }
-    }
-    
-    /**
-     * Save the filter if it's valid
-     */
+
     private void saveFilter() {
-        // Validate and update enchantment ID
         String enchantmentIdStr = enchantmentIdInput.getValue().trim();
         if (!enchantmentIdStr.isEmpty()) {
-            try {                ResourceLocation enchantmentId = ResourceLocation.parse(enchantmentIdStr);
-                Enchantment enchantment = Minecraft.getInstance().level.registryAccess()
-                    .registryOrThrow(Registries.ENCHANTMENT)
-                    .getOptional(enchantmentId)
-                    .orElse(null);
-                
-                if (enchantment == null) {
+            try {
+                Identifier enchantmentId = Identifier.parse(enchantmentIdStr);
+                boolean exists = Minecraft.getInstance().level.registryAccess()
+                        .lookupOrThrow(Registries.ENCHANTMENT)
+                        .get(ResourceKey.create(Registries.ENCHANTMENT, enchantmentId))
+                        .isPresent();
+
+                if (!exists) {
                     setError(Component.translatable("gui.easyautocycler.filter.error.invalid_enchantment_id", enchantmentIdStr));
                     return;
                 }
-                
                 filter.setEnchantmentId(enchantmentId);
             } catch (Exception e) {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_enchantment_id", enchantmentIdStr));
@@ -232,8 +147,7 @@ public class FilterEditorScreen extends Screen {
         } else {
             filter.setEnchantmentId(null);
         }
-        
-        // Validate and update enchantment level
+
         String levelStr = enchantmentLevelInput.getValue().trim();
         try {
             int level = Integer.parseInt(levelStr);
@@ -247,24 +161,17 @@ public class FilterEditorScreen extends Screen {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_level", levelStr));
                 return;
             }
-            // Default to 1 if empty
             filter.setEnchantmentLevel(1);
         }
-        
-        // Validate and update item ID
+
         String itemIdStr = itemIdInput.getValue().trim();
         if (!itemIdStr.isEmpty()) {
-            try {                ResourceLocation itemId = ResourceLocation.parse(itemIdStr);
-                Item item = Minecraft.getInstance().level.registryAccess()
-                    .registryOrThrow(Registries.ITEM)
-                    .getOptional(itemId)
-                    .orElse(null);
-                
-                if (item == null) {
+            try {
+                Identifier itemId = Identifier.parse(itemIdStr);
+                if (!BuiltInRegistries.ITEM.containsKey(itemId)) {
                     setError(Component.translatable("gui.easyautocycler.filter.error.invalid_item_id", itemIdStr));
                     return;
                 }
-                
                 filter.setItemId(itemId);
             } catch (Exception e) {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_item_id", itemIdStr));
@@ -273,8 +180,7 @@ public class FilterEditorScreen extends Screen {
         } else {
             filter.setItemId(null);
         }
-        
-        // Validate and update minimum count
+
         String minCountStr = minCountInput.getValue().trim();
         try {
             int minCount = Integer.parseInt(minCountStr);
@@ -288,35 +194,26 @@ public class FilterEditorScreen extends Screen {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_count", minCountStr));
                 return;
             }
-            // Default to 1 if empty
             filter.setMinCount(1);
         }
-        
-        // Validate and update payment item
+
         String paymentItemStr = paymentItemInput.getValue().trim();
         if (!paymentItemStr.isEmpty()) {
             try {
-                ResourceLocation paymentItemId = ResourceLocation.parse(paymentItemStr);
-                Item paymentItem = Minecraft.getInstance().level.registryAccess()
-                    .registryOrThrow(Registries.ITEM)
-                    .getOptional(paymentItemId)
-                    .orElse(null);
-                
-                if (paymentItem == null) {
+                Identifier paymentItemId = Identifier.parse(paymentItemStr);
+                if (!BuiltInRegistries.ITEM.containsKey(paymentItemId)) {
                     setError(Component.translatable("gui.easyautocycler.filter.error.invalid_payment_item", paymentItemStr));
                     return;
                 }
-                
                 filter.setPaymentItemId(paymentItemId);
             } catch (Exception e) {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_payment_item", paymentItemStr));
                 return;
             }
         } else {
-            filter.setPaymentItemId(null); // null = emeralds (default)
+            filter.setPaymentItemId(null);
         }
-        
-        // Validate and update maximum price
+
         String maxPriceStr = maxPriceInput.getValue().trim();
         try {
             int maxPrice = Integer.parseInt(maxPriceStr);
@@ -330,129 +227,63 @@ public class FilterEditorScreen extends Screen {
                 setError(Component.translatable("gui.easyautocycler.filter.error.invalid_price", maxPriceStr));
                 return;
             }
-            // Default to 64 if empty
             filter.setMaxPrice(64);
         }
-        
-        // Check if the filter has at least one criterion set
+
         if (!filter.isValid()) {
             setError(Component.translatable("gui.easyautocycler.filter.error.no_criteria"));
             return;
         }
-        
-        // Save was successful
-        onSave.accept(0); // The index parameter isn't needed since we're passing the filter directly
+
+        onSave.accept(0);
         onClose();
     }
-    
-    /**
-     * Set an error message
-     */
+
     private void setError(Component message) {
         statusText = message.copy().withStyle(ChatFormatting.RED);
         hasError = true;
     }
+
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        
-        // Draw title
-        guiGraphics.drawCenteredString(
-            this.font, 
-            this.title, 
-            this.width / 2, 
-            PADDING, 
-            0xFFFFFF);
-        
-        // Draw field labels above each input
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        super.extractRenderState(graphics, mouseX, mouseY, a);
+
+        int titleX = this.width / 2 - this.font.width(this.title) / 2;
+        graphics.text(this.font, this.title, titleX, PADDING, 0xFFFFFF, true);
+
         int left = (this.width - INPUT_WIDTH) / 2;
-        int offset = 0;
-        
-        // Enchantment ID label
-        offset += PADDING * 2;
-        guiGraphics.drawString(
-            this.font,
-            Component.translatable("gui.easyautocycler.filter.enchantment_id"),
-            left,
-            offset,
-            0xFFFFFF);
-            
-        // Enchantment Level label
-        offset += INPUT_HEIGHT + PADDING;
-        guiGraphics.drawString(
-            this.font,
-            Component.translatable("gui.easyautocycler.filter.enchantment_level"),
-            left,
-            offset,
-            0xFFFFFF);
-            
-        // Item ID label
-        offset += INPUT_HEIGHT + PADDING;
-        guiGraphics.drawString(
-            this.font,
-            Component.translatable("gui.easyautocycler.filter.item_id"),
-            left,
-            offset,
-            0xFFFFFF);
-            
-        // Min Count label
-        offset += INPUT_HEIGHT + PADDING;
-        guiGraphics.drawString(
-            this.font,
-            Component.translatable("gui.easyautocycler.filter.min_count"),
-            left,
-            offset,
-            0xFFFFFF);
-            
-        // Payment Item label
-        offset += INPUT_HEIGHT + PADDING;
-        guiGraphics.drawString(
-            this.font,
-            Component.translatable("gui.easyautocycler.filter.payment_item"),
-            left,
-            offset,
-            0xFFFFFF);
-            
-        // Max Price label
-        offset += INPUT_HEIGHT + PADDING;
-        guiGraphics.drawString(
-            this.font,
-            Component.translatable("gui.easyautocycler.filter.max_price"),
-            left,
-            offset,
-            0xFFFFFF);
-        
-        // Draw status/error message
-        if (!statusText.getString().isEmpty()) {
-            int statusY = this.height - PADDING * 2 - BUTTON_HEIGHT - 15;
-            guiGraphics.drawCenteredString(
-                this.font,
-                statusText,
-                this.width / 2,
-                statusY,
-                hasError ? 0xFF5555 : 0x55FF55);
+        int offset = PADDING * 2;
+
+        String[] labels = {
+                "gui.easyautocycler.filter.enchantment_id",
+                "gui.easyautocycler.filter.enchantment_level",
+                "gui.easyautocycler.filter.item_id",
+                "gui.easyautocycler.filter.min_count",
+                "gui.easyautocycler.filter.payment_item",
+                "gui.easyautocycler.filter.max_price"
+        };
+        for (String key : labels) {
+            graphics.text(this.font, Component.translatable(key), left, offset, 0xFFFFFF, true);
+            offset += INPUT_HEIGHT + PADDING;
         }
-        
-        // Draw help text
-        if (!hasError) {
-            int helpY = this.height - PADDING * 2 - BUTTON_HEIGHT - 15;
+
+        int statusY = this.height - PADDING * 2 - BUTTON_HEIGHT - 15;
+        if (!statusText.getString().isEmpty()) {
+            int statusX = this.width / 2 - this.font.width(statusText) / 2;
+            graphics.text(this.font, statusText, statusX, statusY, hasError ? 0xFF5555 : 0x55FF55, true);
+        } else {
             Component helpText = Component.translatable("gui.easyautocycler.filter.help")
-                .withStyle(ChatFormatting.GRAY);
-            guiGraphics.drawCenteredString(
-                this.font,
-                helpText,
-                this.width / 2,
-                helpY,
-                0xAAAAAA);
+                    .withStyle(ChatFormatting.GRAY);
+            int helpX = this.width / 2 - this.font.width(helpText) / 2;
+            graphics.text(this.font, helpText, helpX, statusY, 0xAAAAAA, true);
         }
     }
-    
+
     @Override
     public void onClose() {
         Minecraft.getInstance().setScreen(previousScreen);
     }
-    
+
     @Override
     public boolean isPauseScreen() {
         return false;

@@ -24,7 +24,7 @@ A powerful client-side Minecraft mod that automates villager trade cycling. Set 
 - **Mod Loader:** [Fabric](https://fabricmc.net/) + [Fabric API](https://modrinth.com/mod/fabric-api)
 - **[Trade Cycling](https://www.curseforge.com/minecraft/mc-mods/trade-cycling):** Required on the server (client-side only for Easy Auto Cycler)
 
-> **Note:** Easy Villagers is Forge-only and is not supported on Fabric. For Easy Villagers support, use the [`forge-1.20.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/forge-1.20.1) branch.
+> **Note:** Easy Villagers is Forge/NeoForge-only and is not supported on Fabric. For Easy Villagers support, use the [`neoforge-26.1.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.1.2), [`neoforge-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-1.21.1) or [`forge-1.20.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/forge-1.20.1) branch.
 
 ## Usage
 
@@ -37,6 +37,9 @@ A powerful client-side Minecraft mod that automates villager trade cycling. Set 
 
 | Branch | Loader | MC Version | Supported Mods |
 |--------|--------|------------|----------------|
+| [`neoforge-26.1.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.1.2) | NeoForge | 26.1.2 | Easy Villagers, Trade Cycling |
+| [`fabric-26.1.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-26.1.2) | Fabric | 26.1.2 | Trade Cycling |
 | [`neoforge-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-1.21.1) | NeoForge | 1.21.1 | Easy Villagers, Trade Cycling |
+| [`fabric-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-1.21.1) | Fabric | 1.21.1 | Trade Cycling |
 | [`forge-1.20.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/forge-1.20.1) | Forge | 1.20.1 | Easy Villagers, Trade Cycling |
 | **`fabric-1.20.1`** | **Fabric** | **1.20.1** | **Trade Cycling** |

@@ -46,6 +46,7 @@ public class ConfigScreen extends Screen {
     private int originalDelay;
     private CycleButton<Boolean> matchModeCycleButton;
     private boolean matchAny = true;
+    private boolean saved = false;
 
     private static final int PADDING = 6;
     private static final int INPUT_HEIGHT = 20;
@@ -239,7 +240,8 @@ public class ConfigScreen extends Screen {
         // Save all filters to the AutomationManager
         AutomationManager.INSTANCE.setMatchAny(matchModeCycleButton.getValue());
         AutomationManager.INSTANCE.setFilterEntries(filters);
-        
+
+        this.saved = true;
         this.sendMessageToPlayer(Component.literal("Configuration saved!").withStyle(ChatFormatting.GREEN));
         this.onClose();
     }
@@ -265,11 +267,13 @@ public class ConfigScreen extends Screen {
         } 
     }
     
-    @Override public void onClose() { 
-        // Revert runtime state if user exits without saving.
-        AutomationManager.INSTANCE.setMatchAny(this.originalMatchAny);
-        AutomationManager.INSTANCE.setFilterEntries(this.originalFilters.stream().map(FilterEntry::new).collect(java.util.stream.Collectors.toList()));
-        AutomationManager.INSTANCE.configureSpeed(this.originalDelay);
+    @Override public void onClose() {
+        // Revert runtime state only if user exits without saving.
+        if (!this.saved) {
+            AutomationManager.INSTANCE.setMatchAny(this.originalMatchAny);
+            AutomationManager.INSTANCE.setFilterEntries(this.originalFilters.stream().map(FilterEntry::new).collect(java.util.stream.Collectors.toList()));
+            AutomationManager.INSTANCE.configureSpeed(this.originalDelay);
+        }
 
         if (this.minecraft != null) { 
             this.minecraft.setScreen(this.previousScreen); 

@@ -2,6 +2,7 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,11 +17,23 @@ public class ClientEventHandler {
     private static final ResourceLocation PLAY_BUTTON_NORMAL_RL = ResourceLocation.tryParse(EasyAutoCyclerMod.MODID + ":gui/play_button.png");
     private static final ResourceLocation PLAY_BUTTON_HOVER_RL = ResourceLocation.tryParse(EasyAutoCyclerMod.MODID + ":gui/play_button_highlighted.png");
 
+    /**
+     * Register per-MerchantScreen keyboard handler. Called from BEFORE_INIT so the
+     * per-screen event registry has just been reset (Fabric clears it at init HEAD).
+     * The toggle keybind doesn't fire through KeyMapping.consumeClick() while a Screen
+     * has input focus, so we hook the screen's key-press event directly.
+     */
+    public static void onScreenBeforeInit(Minecraft client, Screen screen, int scaledWidth, int scaledHeight) {
+        if (!(screen instanceof MerchantScreen)) return;
+        ScreenKeyboardEvents.beforeKeyPress(screen).register((s, key, scancode, modifiers) -> {
+            if (Keybindings.toggleAutoTradeKey != null && Keybindings.toggleAutoTradeKey.matches(key, scancode)) {
+                AutomationManager.INSTANCE.toggle();
+            }
+        });
+    }
+
     public static void onScreenInit(Minecraft client, Screen screen, int scaledWidth, int scaledHeight) {
         if (screen instanceof MerchantScreen merchantScreen) {
-            if (!AutomationManager.INSTANCE.canCycleTrades(merchantScreen.getMenu())) {
-                return;
-            }
             EasyAutoCyclerMod.LOGGER.debug("MerchantScreen opened. Adding custom image buttons...");
             int leftPos = (merchantScreen.width - 276) / 2; int topPos = (merchantScreen.height - 166) / 2; int buttonWidth = 18; int buttonHeight = 18; int buttonPadding = 2; int cycleButtonPosX = leftPos + 107; int cycleButtonPosY = topPos + 8; int cycleButtonHeight = 14; int configButtonX = cycleButtonPosX; int configButtonY = cycleButtonPosY + cycleButtonHeight + buttonPadding; int toggleButtonX = cycleButtonPosX; int toggleButtonY = configButtonY + buttonHeight + buttonPadding;
 

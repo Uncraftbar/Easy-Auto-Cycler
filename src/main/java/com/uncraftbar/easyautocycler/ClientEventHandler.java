@@ -1,7 +1,9 @@
 package com.uncraftbar.easyautocycler;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
@@ -16,6 +18,24 @@ public class ClientEventHandler {
     private static final Identifier CONFIG_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/config_button_highlighted.png");
     private static final Identifier PLAY_BUTTON_NORMAL_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/play_button.png");
     private static final Identifier PLAY_BUTTON_HOVER_RL = Identifier.fromNamespaceAndPath(EasyAutoCyclerMod.MODID, "textures/gui/play_button_highlighted.png");
+
+    /**
+     * Register per-MerchantScreen keyboard handler. Called from BEFORE_INIT (earliest point
+     * at which ScreenKeyboardEvents exist on the fresh screen instance, per Fabric docs).
+     * The toggle keybind doesn't fire through KeyMapping.consumeClick() while a Screen has input
+     * focus, so we hook the screen's key-press event directly.
+     */
+    public static void onScreenBeforeInit(Minecraft client, Screen screen, int scaledWidth, int scaledHeight) {
+        if (!(screen instanceof MerchantScreen)) return;
+
+        ScreenKeyboardEvents.beforeKeyPress(screen).register((s, event) -> {
+            if (Keybindings.toggleAutoTradeKey == null) return;
+            InputConstants.Key bound = KeyMappingHelper.getBoundKeyOf(Keybindings.toggleAutoTradeKey);
+            if (bound.getType() != InputConstants.Type.KEYSYM) return;
+            if (event.key() != bound.getValue()) return;
+            AutomationManager.INSTANCE.toggle();
+        });
+    }
 
     public static void onScreenInit(Minecraft client, Screen screen, int scaledWidth, int scaledHeight) {
         if (!(screen instanceof MerchantScreen merchantScreen)) {
@@ -50,13 +70,5 @@ public class ClientEventHandler {
 
         Screens.getWidgets(screen).add(configButton);
         Screens.getWidgets(screen).add(toggleButton);
-
-        // The toggle keybind doesn't fire through KeyMapping.consumeClick() while a Screen is
-        // open, so hook the screen's key-press event directly for MerchantScreen.
-        ScreenKeyboardEvents.beforeKeyPress(screen).register((s, event) -> {
-            if (Keybindings.toggleAutoTradeKey != null && Keybindings.toggleAutoTradeKey.matches(event)) {
-                AutomationManager.INSTANCE.toggle();
-            }
-        });
     }
 }

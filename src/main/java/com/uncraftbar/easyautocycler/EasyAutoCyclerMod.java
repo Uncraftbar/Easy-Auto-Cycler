@@ -27,6 +27,7 @@ public class EasyAutoCyclerMod implements ClientModInitializer {
             InputHandler.onClientTick(client);
         });
 
+        ScreenEvents.BEFORE_INIT.register(ClientEventHandler::onScreenBeforeInit);
         ScreenEvents.AFTER_INIT.register(ClientEventHandler::onScreenInit);
 
         LOGGER.info("Client event handlers registered.");

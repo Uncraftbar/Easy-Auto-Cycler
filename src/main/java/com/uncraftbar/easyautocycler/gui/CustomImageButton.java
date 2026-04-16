@@ -31,11 +31,6 @@ public class CustomImageButton extends AbstractButton {
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         Identifier texture = this.isHovered() && this.active ? this.textureHover : this.textureNormal;
 
-        // Background fill so the button area is always visible — texture failing to load on a
-        // given resource pack shouldn't leave an invisible click target.
-        int bgColor = this.isHovered() && this.active ? 0xFF555555 : 0xFF333333;
-        graphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, bgColor);
-
         graphics.blit(RenderPipelines.GUI_TEXTURED, texture,
                 this.getX(), this.getY(),
                 0.0F, 0.0F,

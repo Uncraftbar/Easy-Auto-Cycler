@@ -1,7 +1,6 @@
 package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
-import com.uncraftbar.easyautocycler.gui.FilterListScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
@@ -27,12 +26,7 @@ public class InputHandler {
         }
 
         if (Keybindings.openConfigKey != null && Keybindings.openConfigKey.consumeClick()) {
-            boolean shiftPressed = mc.hasShiftDown();
-            if (shiftPressed) {
-                mc.setScreen(new FilterListScreen(currentScreen));
-            } else {
-                mc.setScreen(new ConfigScreen(currentScreen, Component.translatable("gui.easyautocycler.config.title")));
-            }
+            mc.setScreen(new ConfigScreen(currentScreen, Component.translatable("gui.easyautocycler.config.title")));
         }
     }
 }

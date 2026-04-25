@@ -5,7 +5,7 @@ import com.uncraftbar.easyautocycler.EasyAutoCyclerMod;
 import com.uncraftbar.easyautocycler.filter.FilterEntry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -188,17 +188,17 @@ public class ConfigScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+        super.render(graphics, mouseX, mouseY, a);
         int titleX = this.width / 2 - this.font.width(this.title) / 2;
-        graphics.text(this.font, this.title, titleX, PADDING * 2, -1, true);
+        graphics.drawString(this.font, this.title, titleX, PADDING * 2, -1, true);
 
         if (filters.isEmpty()) {
             Component noFiltersMsg = Component.translatable("gui.easyautocycler.filters.no_filters")
                     .withStyle(ChatFormatting.GRAY);
             int msgX = this.width / 2 - this.font.width(noFiltersMsg) / 2;
             int msgY = PADDING * 4 + 10 + BUTTON_HEIGHT + PADDING + 30;
-            graphics.text(this.font, noFiltersMsg, msgX, msgY, 0xFFAAAAAA, true);
+            graphics.drawString(this.font, noFiltersMsg, msgX, msgY, 0xFFAAAAAA, true);
         }
 
         int hiddenCount = filters.size() - visibleFilterCount();
@@ -207,7 +207,7 @@ public class ConfigScreen extends Screen {
                     .withStyle(ChatFormatting.GRAY);
             int msgX = this.width / 2 - this.font.width(moreMsg) / 2;
             int msgY = this.delayCycleButton.getY() - 14;
-            graphics.text(this.font, moreMsg, msgX, msgY, 0xFFAAAAAA, true);
+            graphics.drawString(this.font, moreMsg, msgX, msgY, 0xFFAAAAAA, true);
         }
     }
 
@@ -248,7 +248,7 @@ public class ConfigScreen extends Screen {
 
     private void sendMessageToPlayer(Component message) {
         if (this.minecraft != null && this.minecraft.player != null) {
-            this.minecraft.player.sendSystemMessage(message);
+            this.minecraft.player.displayClientMessage(message, false);
         }
     }
 

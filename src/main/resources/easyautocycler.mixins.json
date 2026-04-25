@@ -1,7 +1,7 @@
 {
   "required": false,
   "package": "com.uncraftbar.easyautocycler.mixin",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "JAVA_21",
   "client": [],
   "injectors": {
     "defaultRequire": 1

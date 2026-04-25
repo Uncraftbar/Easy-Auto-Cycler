@@ -1,7 +1,7 @@
 package com.uncraftbar.easyautocycler;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
@@ -18,14 +18,14 @@ public class Keybindings {
     public static KeyMapping openConfigKey;
 
     public static void registerKeyMappings() {
-        toggleAutoTradeKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+        toggleAutoTradeKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 KEY_TOGGLE_AUTO_TRADE,
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_R,
                 CATEGORY
         ));
 
-        openConfigKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+        openConfigKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 KEY_OPEN_CONFIG,
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_C,

@@ -3,7 +3,7 @@ package com.uncraftbar.easyautocycler.gui;
 import com.uncraftbar.easyautocycler.filter.FilterEntry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -245,11 +245,11 @@ public class FilterEditorScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
-        super.extractRenderState(graphics, mouseX, mouseY, a);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float a) {
+        super.render(graphics, mouseX, mouseY, a);
 
         int titleX = this.width / 2 - this.font.width(this.title) / 2;
-        graphics.text(this.font, this.title, titleX, PADDING, -1, true);
+        graphics.drawString(this.font, this.title, titleX, PADDING, -1, true);
 
         int left = (this.width - INPUT_WIDTH) / 2;
         int offset = PADDING * 2;
@@ -263,19 +263,19 @@ public class FilterEditorScreen extends Screen {
                 "gui.easyautocycler.filter.max_price"
         };
         for (String key : labels) {
-            graphics.text(this.font, Component.translatable(key), left, offset, -1, true);
+            graphics.drawString(this.font, Component.translatable(key), left, offset, -1, true);
             offset += INPUT_HEIGHT + PADDING;
         }
 
         int statusY = this.height - PADDING * 2 - BUTTON_HEIGHT - 15;
         if (!statusText.getString().isEmpty()) {
             int statusX = this.width / 2 - this.font.width(statusText) / 2;
-            graphics.text(this.font, statusText, statusX, statusY, hasError ? 0xFFFF5555 : 0xFF55FF55, true);
+            graphics.drawString(this.font, statusText, statusX, statusY, hasError ? 0xFFFF5555 : 0xFF55FF55, true);
         } else {
             Component helpText = Component.translatable("gui.easyautocycler.filter.help")
                     .withStyle(ChatFormatting.GRAY);
             int helpX = this.width / 2 - this.font.width(helpText) / 2;
-            graphics.text(this.font, helpText, helpX, statusY, 0xFFAAAAAA, true);
+            graphics.drawString(this.font, helpText, helpX, statusY, 0xFFAAAAAA, true);
         }
     }
 

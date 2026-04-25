@@ -4,7 +4,7 @@
 [![Modrinth](https://img.shields.io/badge/dynamic/json?labelColor=black&color=grey&label=&suffix=%20downloads&query=downloads&url=https://api.modrinth.com/v2/project/easy-auto-cycler&style=flat&logo=modrinth)](https://modrinth.com/mod/easy-auto-cycler)
 [![GitHub license](https://img.shields.io/github/license/Uncraftbar/Easy-Auto-Cycler)](LICENSE)
 
-> **Branch: `fabric-26.1.2`** — Fabric 26.1.2 with [Trade Cycling](https://www.curseforge.com/minecraft/mc-mods/trade-cycling) support.
+> **Branch: `fabric-1.21.11`** — Fabric for Minecraft 1.21.11 with [Trade Cycling](https://www.curseforge.com/minecraft/mc-mods/trade-cycling) support.
 
 A powerful client-side Minecraft mod that automates villager trade cycling. Set up filters for the trades you want, press a keybind, and the mod automatically re-rolls until it finds a match.
 
@@ -20,7 +20,7 @@ A powerful client-side Minecraft mod that automates villager trade cycling. Set 
 
 ## Requirements
 
-- **Minecraft:** 26.1.2
+- **Minecraft:** 1.21.11
 - **Mod Loader:** [Fabric](https://fabricmc.net/) + [Fabric API](https://modrinth.com/mod/fabric-api)
 - **Java:** 25
 - **[Trade Cycling](https://www.curseforge.com/minecraft/mc-mods/trade-cycling):** Required on the server (client-side only for Easy Auto Cycler)
@@ -38,8 +38,8 @@ A powerful client-side Minecraft mod that automates villager trade cycling. Set 
 
 | Branch | Loader | MC Version | Supported Mods |
 |--------|--------|------------|----------------|
-| **`fabric-26.1.2`** | **Fabric** | **26.1.2** | **Trade Cycling** |
-| [`neoforge-26.1.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.1.2) | NeoForge | 26.1.2 | Easy Villagers, Trade Cycling |
+| **`fabric-1.21.11`** | **Fabric** | **1.21.11** | **Trade Cycling** |
+| [`neoforge-1.21.11`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-1.21.11) | NeoForge | 1.21.11 | Easy Villagers, Trade Cycling |
 | [`neoforge-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-1.21.1) | NeoForge | 1.21.1 | Easy Villagers, Trade Cycling |
 | [`fabric-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-1.21.1) | Fabric | 1.21.1 | Trade Cycling |
 | [`forge-1.20.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/forge-1.20.1) | Forge | 1.20.1 | Easy Villagers, Trade Cycling |

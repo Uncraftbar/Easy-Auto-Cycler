@@ -1,6 +1,6 @@
 package com.uncraftbar.easyautocycler.gui;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.InputWithModifiers;
@@ -28,7 +28,7 @@ public class CustomImageButton extends AbstractButton {
     }
 
     @Override
-    protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+    protected void renderContents(GuiGraphics graphics, int mouseX, int mouseY, float a) {
         Identifier texture = this.isHovered() && this.active ? this.textureHover : this.textureNormal;
 
         graphics.blit(RenderPipelines.GUI_TEXTURED, texture,

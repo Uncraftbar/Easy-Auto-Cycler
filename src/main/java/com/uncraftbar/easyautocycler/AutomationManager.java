@@ -385,7 +385,7 @@ public class AutomationManager {
     private void sendMessageToPlayer(Component message) {
         Minecraft mc = Minecraft.getInstance();
         if (mc != null && mc.player != null) {
-            mc.player.sendSystemMessage(message);
+            mc.player.displayClientMessage(message, false);
         }
     }
 

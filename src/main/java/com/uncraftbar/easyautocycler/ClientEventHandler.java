@@ -3,7 +3,7 @@ package com.uncraftbar.easyautocycler;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
@@ -30,7 +30,7 @@ public class ClientEventHandler {
 
         ScreenKeyboardEvents.beforeKeyPress(screen).register((s, event) -> {
             if (Keybindings.toggleAutoTradeKey == null) return;
-            InputConstants.Key bound = KeyMappingHelper.getBoundKeyOf(Keybindings.toggleAutoTradeKey);
+            InputConstants.Key bound = KeyBindingHelper.getBoundKeyOf(Keybindings.toggleAutoTradeKey);
             if (bound.getType() != InputConstants.Type.KEYSYM) return;
             if (event.key() != bound.getValue()) return;
             AutomationManager.INSTANCE.toggle();
@@ -68,7 +68,7 @@ public class ClientEventHandler {
                 Component.translatable("gui.easyautocycler.button.toggle.tooltip"),
                 (button) -> AutomationManager.INSTANCE.toggle());
 
-        Screens.getWidgets(screen).add(configButton);
-        Screens.getWidgets(screen).add(toggleButton);
+        Screens.getButtons(screen).add(configButton);
+        Screens.getButtons(screen).add(toggleButton);
     }
 }

@@ -3,6 +3,7 @@ package com.uncraftbar.easyautocycler;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.network.chat.Component;
@@ -28,13 +29,15 @@ public class ClientEventHandler {
             int leftPos = (merchantScreen.width - 276) / 2; int topPos = (merchantScreen.height - 166) / 2; int buttonWidth = 18; int buttonHeight = 18; int buttonPadding = 2; int cycleButtonPosX = leftPos + 107; int cycleButtonPosY = topPos + 8; int cycleButtonHeight = 14; int configButtonX = cycleButtonPosX; int configButtonY = cycleButtonPosY + cycleButtonHeight + buttonPadding; int toggleButtonX = cycleButtonPosX; int toggleButtonY = configButtonY + buttonHeight + buttonPadding;
             Minecraft mc = Minecraft.getInstance();
 
-            CustomImageButton configButton = new CustomImageButton( configButtonX, configButtonY, buttonWidth, buttonHeight, CONFIG_BUTTON_NORMAL_RL, CONFIG_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.config.tooltip"),
+            CustomImageButton configButton = new CycleAwareImageButton(
+                    merchantScreen, configButtonX, configButtonY, buttonWidth, buttonHeight, CONFIG_BUTTON_NORMAL_RL, CONFIG_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.config.tooltip"),
                     (button) -> {
                         EasyAutoCyclerMod.LOGGER.debug("Calling ConfigScreen.open from button.");
                         Minecraft.getInstance().setScreen(new ConfigScreen(merchantScreen, Component.translatable("gui.easyautocycler.config.title")));
                     }
             );
-            CustomImageButton toggleButton = new CustomImageButton( toggleButtonX, toggleButtonY, buttonWidth, buttonHeight, PLAY_BUTTON_NORMAL_RL, PLAY_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.toggle.tooltip"), (button) -> { AutomationManager.INSTANCE.toggle(); } );
+            CustomImageButton toggleButton = new CycleAwareImageButton(
+                    merchantScreen, toggleButtonX, toggleButtonY, buttonWidth, buttonHeight, PLAY_BUTTON_NORMAL_RL, PLAY_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.toggle.tooltip"), (button) -> { AutomationManager.INSTANCE.toggle(); } );
 
             event.addListener(configButton);
             event.addListener(toggleButton);
@@ -44,4 +47,36 @@ public class ClientEventHandler {
 
     @SubscribeEvent public void onScreenClose(ScreenEvent.Closing event) { if (event.getScreen() instanceof MerchantScreen) { EasyAutoCyclerMod.LOGGER.debug("MerchantScreen closing."); } }
     @SubscribeEvent public void onClientTick(TickEvent.ClientTickEvent event) { if (event.phase == TickEvent.Phase.END) { if (AutomationManager.INSTANCE.isRunning()) { AutomationManager.INSTANCE.clientTick(); } } }
+
+    private static class CycleAwareImageButton extends CustomImageButton {
+        private final MerchantScreen merchantScreen;
+
+        CycleAwareImageButton(MerchantScreen merchantScreen, int x, int y, int width, int height,
+                              ResourceLocation textureNormal, ResourceLocation textureHover,
+                              Component tooltip, OnPress onPress) {
+            super(x, y, width, height, textureNormal, textureHover, tooltip, onPress);
+            this.merchantScreen = merchantScreen;
+        }
+
+        private void refreshCycleAvailability() {
+            boolean canCycle = AutomationManager.INSTANCE.canCycleTrades(this.merchantScreen.getMenu());
+            this.visible = canCycle;
+            this.active = canCycle;
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+            refreshCycleAvailability();
+            super.renderWidget(guiGraphics, mouseX, mouseY, partialTicks);
+        }
+
+        @Override
+        public void onPress() {
+            refreshCycleAvailability();
+            if (this.visible && this.active) {
+                super.onPress();
+            }
+        }
+    }
+
 }

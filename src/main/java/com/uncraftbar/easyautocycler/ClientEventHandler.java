@@ -7,6 +7,8 @@ import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.InputWithModifiers;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.network.chat.Component;
@@ -55,14 +57,16 @@ public class ClientEventHandler {
         int toggleButtonX = cycleButtonPosX;
         int toggleButtonY = configButtonY + buttonHeight + buttonPadding;
 
-        CustomImageButton configButton = new CustomImageButton(
+        CustomImageButton configButton = new CycleAwareImageButton(
+                    merchantScreen,
                 configButtonX, configButtonY, buttonWidth, buttonHeight,
                 CONFIG_BUTTON_NORMAL_RL, CONFIG_BUTTON_HOVER_RL,
                 Component.translatable("gui.easyautocycler.button.config.tooltip"),
                 (button) -> Minecraft.getInstance().setScreen(
                         new ConfigScreen(merchantScreen, Component.translatable("gui.easyautocycler.config.title"))));
 
-        CustomImageButton toggleButton = new CustomImageButton(
+        CustomImageButton toggleButton = new CycleAwareImageButton(
+                    merchantScreen,
                 toggleButtonX, toggleButtonY, buttonWidth, buttonHeight,
                 PLAY_BUTTON_NORMAL_RL, PLAY_BUTTON_HOVER_RL,
                 Component.translatable("gui.easyautocycler.button.toggle.tooltip"),
@@ -71,4 +75,36 @@ public class ClientEventHandler {
         Screens.getWidgets(screen).add(configButton);
         Screens.getWidgets(screen).add(toggleButton);
     }
+
+    private static class CycleAwareImageButton extends CustomImageButton {
+        private final MerchantScreen merchantScreen;
+
+        CycleAwareImageButton(MerchantScreen merchantScreen, int x, int y, int width, int height,
+                              Identifier textureNormal, Identifier textureHover,
+                              Component tooltip, OnPress onPress) {
+            super(x, y, width, height, textureNormal, textureHover, tooltip, onPress);
+            this.merchantScreen = merchantScreen;
+        }
+
+        private void refreshCycleAvailability() {
+            boolean canCycle = AutomationManager.INSTANCE.canCycleTrades(this.merchantScreen.getMenu());
+            this.visible = canCycle;
+            this.active = canCycle;
+        }
+
+        @Override
+        protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+            refreshCycleAvailability();
+            super.extractContents(graphics, mouseX, mouseY, partialTicks);
+        }
+
+        @Override
+        public void onPress(InputWithModifiers input) {
+            refreshCycleAvailability();
+            if (this.visible && this.active) {
+                super.onPress(input);
+            }
+        }
+    }
+
 }

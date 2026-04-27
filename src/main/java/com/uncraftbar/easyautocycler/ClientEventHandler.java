@@ -3,6 +3,7 @@ package com.uncraftbar.easyautocycler;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.network.chat.Component;
@@ -36,7 +37,8 @@ public class ClientEventHandler {
 
             Minecraft mc = Minecraft.getInstance();
 
-            CustomImageButton configButton = new CustomImageButton(
+            CustomImageButton configButton = new CycleAwareImageButton(
+                    merchantScreen,
                     configButtonX, configButtonY, buttonWidth, buttonHeight,
                     CONFIG_BUTTON_NORMAL_RL,
                     CONFIG_BUTTON_HOVER_RL,
@@ -49,7 +51,8 @@ public class ClientEventHandler {
                     }
             );
 
-            CustomImageButton toggleButton = new CustomImageButton(
+            CustomImageButton toggleButton = new CycleAwareImageButton(
+                    merchantScreen,
                     toggleButtonX, toggleButtonY, buttonWidth, buttonHeight,
                     PLAY_BUTTON_NORMAL_RL,
                     PLAY_BUTTON_HOVER_RL,
@@ -71,4 +74,35 @@ public class ClientEventHandler {
             EasyAutoCyclerMod.LOGGER.debug("MerchantScreen closing."); } }
     @SubscribeEvent public void onClientTickPost(ClientTickEvent.Post event) {
         if (AutomationManager.INSTANCE.isRunning()) {AutomationManager.INSTANCE.clientTick(); } }
+    private static class CycleAwareImageButton extends CustomImageButton {
+        private final MerchantScreen merchantScreen;
+
+        CycleAwareImageButton(MerchantScreen merchantScreen, int x, int y, int width, int height,
+                              ResourceLocation textureNormal, ResourceLocation textureHover,
+                              Component tooltip, OnPress onPress) {
+            super(x, y, width, height, textureNormal, textureHover, tooltip, onPress);
+            this.merchantScreen = merchantScreen;
+        }
+
+        private void refreshCycleAvailability() {
+            boolean canCycle = AutomationManager.INSTANCE.canCycle(this.merchantScreen.getMenu());
+            this.visible = canCycle;
+            this.active = canCycle;
+        }
+
+        @Override
+        public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+            refreshCycleAvailability();
+            super.renderWidget(guiGraphics, mouseX, mouseY, partialTicks);
+        }
+
+        @Override
+        public void onPress() {
+            refreshCycleAvailability();
+            if (this.visible && this.active) {
+                super.onPress();
+            }
+        }
+    }
+
 }

@@ -101,7 +101,7 @@ public class AutomationManager {
         public void sendCyclePacket() {
             try {
                 Object packet = packetConstructor.newInstance();
-                PacketDistributor.sendToServer((CustomPacketPayload)packet);
+                PacketDistributor.sendToServer((CustomPacketPayload) packet);
                 EasyAutoCyclerMod.LOGGER.trace("Sent Easy Villagers cycle packet");
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send Easy Villagers packet", e);
@@ -133,7 +133,7 @@ public class AutomationManager {
         public void sendCyclePacket() {
             try {
                 Object packet = packetConstructor.newInstance();
-                PacketDistributor.sendToServer((CustomPacketPayload)packet);
+                PacketDistributor.sendToServer((CustomPacketPayload) packet);
                 EasyAutoCyclerMod.LOGGER.trace("Sent Trade Cycling cycle packet");
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send Trade Cycling packet", e);

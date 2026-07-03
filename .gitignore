@@ -20,6 +20,7 @@ build
 # other
 eclipse
 run
+run-fabric-trade-cycling
 runs
 run-data
 marketing_posts.md

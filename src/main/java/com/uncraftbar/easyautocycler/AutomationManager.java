@@ -2,7 +2,6 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.config.FilterConfig;
 import com.uncraftbar.easyautocycler.filter.FilterEntry;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -13,6 +12,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
@@ -73,7 +73,9 @@ public class AutomationManager {
         public void sendCyclePacket() {
             try {
                 Object packet = packetConstructor.newInstance();
-                ClientPlayNetworking.send((CustomPacketPayload) packet);
+                if (Minecraft.getInstance().getConnection() != null) {
+                    Minecraft.getInstance().getConnection().send(new ServerboundCustomPayloadPacket((CustomPacketPayload) packet));
+                }
                 EasyAutoCyclerMod.LOGGER.trace("Sent Trade Cycling cycle packet");
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send Trade Cycling packet", e);

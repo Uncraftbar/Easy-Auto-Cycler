@@ -9,11 +9,11 @@ public class InputHandler {
 
     public static void onClientTick(Minecraft client) {
         if (Keybindings.openConfigKey != null && Keybindings.openConfigKey.consumeClick()) {
-            client.setScreen(new ConfigScreen(client.screen, Component.translatable("gui.easyautocycler.config.title")));
+            client.setScreenAndShow(new ConfigScreen(client.gui.screen(), Component.translatable("gui.easyautocycler.config.title")));
         }
 
         if (Keybindings.toggleAutoTradeKey != null && Keybindings.toggleAutoTradeKey.consumeClick()) {
-            if (client.screen instanceof MerchantScreen) {
+            if (client.gui.screen() instanceof MerchantScreen) {
                 AutomationManager.INSTANCE.toggle();
             }
         }

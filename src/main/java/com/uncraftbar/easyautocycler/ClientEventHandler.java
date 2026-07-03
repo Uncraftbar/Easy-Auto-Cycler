@@ -62,7 +62,7 @@ public class ClientEventHandler {
                 configButtonX, configButtonY, buttonWidth, buttonHeight,
                 CONFIG_BUTTON_NORMAL_RL, CONFIG_BUTTON_HOVER_RL,
                 Component.translatable("gui.easyautocycler.button.config.tooltip"),
-                (button) -> Minecraft.getInstance().setScreen(
+                (button) -> Minecraft.getInstance().setScreenAndShow(
                         new ConfigScreen(merchantScreen, Component.translatable("gui.easyautocycler.config.title"))));
 
         CustomImageButton toggleButton = new CycleAwareImageButton(

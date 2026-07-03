@@ -22,9 +22,13 @@
   ],
   "depends": {
     "fabricloader": ">=0.18.6",
-    "minecraft": "~26.1",
+    "minecraft": "~26.2",
     "java": ">=25",
-    "fabric-api": "*"
+    "fabric-api-base": "*",
+    "fabric-key-mapping-api-v1": "*",
+    "fabric-networking-api-v1": "*",
+    "fabric-resource-loader-v0": "*",
+    "fabric-screen-api-v1": "*"
   },
   "suggests": {
     "trade_cycling": "*"

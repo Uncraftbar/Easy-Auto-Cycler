@@ -2,7 +2,6 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.config.FilterConfig;
 import com.uncraftbar.easyautocycler.filter.FilterEntry;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -14,6 +13,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.inventory.MerchantMenu;
@@ -73,7 +73,9 @@ public class AutomationManager {
         public void sendCyclePacket() {
             try {
                 Object packet = packetConstructor.newInstance();
-                ClientPlayNetworking.send((CustomPacketPayload) packet);
+                if (Minecraft.getInstance().getConnection() != null) {
+                    Minecraft.getInstance().getConnection().send(new ServerboundCustomPayloadPacket((CustomPacketPayload) packet));
+                }
                 EasyAutoCyclerMod.LOGGER.trace("Sent Trade Cycling cycle packet");
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send Trade Cycling packet", e);
@@ -229,7 +231,7 @@ public class AutomationManager {
     }
 
     private void start() {
-        Screen currentScreen = Minecraft.getInstance().screen;
+        Screen currentScreen = Minecraft.getInstance().gui.screen();
 
         if (!(currentScreen instanceof MerchantScreen)) {
             this.sendMessageToPlayer(Component.literal("Error: Villager trade screen not open."));
@@ -263,7 +265,7 @@ public class AutomationManager {
     public void clientTick() {
         if (!isRunning.get()) return;
 
-        if (!(Minecraft.getInstance().screen instanceof MerchantScreen screen)) {
+        if (!(Minecraft.getInstance().gui.screen() instanceof MerchantScreen screen)) {
             stop("Screen closed");
             return;
         }

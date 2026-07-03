@@ -3,7 +3,7 @@ plugins {
     id 'eclipse'
     id 'idea'
     id 'maven-publish'
-    id 'net.neoforged.gradle.userdev' version '7.1.22'
+    id 'net.neoforged.gradle.userdev' version '7.1.38'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -39,6 +39,11 @@ runs {
 
     client {
         systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        if (project.hasProperty('runtimeEasyVillagers')) {
+            workingDirectory project.file('runs/client-easy-villagers')
+        } else if (project.hasProperty('runtimeTradeCycling')) {
+            workingDirectory project.file('runs/client-trade-cycling')
+        }
     }
 
     server {
@@ -66,8 +71,15 @@ configurations {
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
 
-    compileOnly "curse.maven:easy-villagers-400514:${easy_villagers_file_id}"
+    compileOnly files("libs/easy-villagers-neoforge-1.1.42+26.2.jar")
     compileOnly "curse.maven:trader-cycling-570431:${trade_cycling_file_id}"
+
+    if (project.hasProperty('runtimeEasyVillagers')) {
+        localRuntime files("libs/easy-villagers-neoforge-1.1.42+26.2.jar")
+    }
+    if (project.hasProperty('runtimeTradeCycling')) {
+        localRuntime "curse.maven:trader-cycling-570431:${trade_cycling_file_id}"
+    }
 }
 
 tasks.withType(ProcessResources).configureEach {

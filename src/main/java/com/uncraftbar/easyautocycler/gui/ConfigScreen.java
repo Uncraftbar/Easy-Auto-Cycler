@@ -261,7 +261,7 @@ public class ConfigScreen extends Screen {
         }
 
         if (this.minecraft != null) {
-            this.minecraft.setScreen(this.previousScreen);
+            this.minecraft.setScreenAndShow(this.previousScreen);
         }
     }
 
@@ -277,7 +277,7 @@ public class ConfigScreen extends Screen {
                 filters.add(newFilter);
                 this.rebuildWidgets();
             });
-            Minecraft.getInstance().setScreen(editorScreen);
+            Minecraft.getInstance().setScreenAndShow(editorScreen);
         } else {
             int filterIndex = filters.indexOf(filterToEdit);
             if (filterIndex >= 0) {
@@ -286,7 +286,7 @@ public class ConfigScreen extends Screen {
                     filters.set(filterIndex, filterCopy);
                     this.rebuildWidgets();
                 });
-                Minecraft.getInstance().setScreen(editorScreen);
+                Minecraft.getInstance().setScreenAndShow(editorScreen);
             }
         }
     }

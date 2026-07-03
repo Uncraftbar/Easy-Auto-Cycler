@@ -269,7 +269,7 @@ public class AutomationManager {
     public void toggle() { if (isRunning.get()) { stop("Toggled off by user"); } else { start(); } }
 
     private void start() {
-        Screen currentScreen = Minecraft.getInstance().screen;
+        Screen currentScreen = Minecraft.getInstance().gui.screen();
         String screenName = (currentScreen != null) ? currentScreen.getClass().getName() : "null";
 
         if (!initialized) {
@@ -334,7 +334,7 @@ public class AutomationManager {
             return;
         }
 
-        if (!(Minecraft.getInstance().screen instanceof MerchantScreen screen)) {
+        if (!(Minecraft.getInstance().gui.screen() instanceof MerchantScreen screen)) {
             stop("Screen closed");
             return;
         }

@@ -14,7 +14,7 @@ public class InputHandler {
     @SubscribeEvent
     public void onKeyInput(InputEvent.Key event) {
         Minecraft mc = Minecraft.getInstance();
-        Screen currentScreen = mc.screen;
+        Screen currentScreen = mc.gui.screen();
 
         if (currentScreen instanceof MerchantScreen
                 && Keybindings.toggleAutoTradeKey != null
@@ -26,7 +26,7 @@ public class InputHandler {
         }
 
         if (Keybindings.openConfigKey != null && Keybindings.openConfigKey.consumeClick()) {
-            mc.setScreen(new ConfigScreen(currentScreen, Component.translatable("gui.easyautocycler.config.title")));
+            mc.setScreenAndShow(new ConfigScreen(currentScreen, Component.translatable("gui.easyautocycler.config.title")));
         }
     }
 }

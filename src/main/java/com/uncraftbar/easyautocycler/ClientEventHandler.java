@@ -46,7 +46,7 @@ public class ClientEventHandler {
                     CONFIG_BUTTON_NORMAL_RL,
                     CONFIG_BUTTON_HOVER_RL,
                     Component.translatable("gui.easyautocycler.button.config.tooltip"),
-                    (button) -> mc.setScreen(new ConfigScreen(merchantScreen, Component.translatable("gui.easyautocycler.config.title")))
+                    (button) -> mc.setScreenAndShow(new ConfigScreen(merchantScreen, Component.translatable("gui.easyautocycler.config.title")))
             );
 
             CustomImageButton toggleButton = new CycleAwareImageButton(

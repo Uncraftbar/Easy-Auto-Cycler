@@ -281,7 +281,7 @@ public class FilterEditorScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().setScreen(previousScreen);
+        Minecraft.getInstance().setScreenAndShow(previousScreen);
     }
 
     @Override

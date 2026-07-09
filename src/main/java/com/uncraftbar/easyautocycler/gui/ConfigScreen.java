@@ -31,7 +31,6 @@ public class ConfigScreen extends Screen {
     private EditBox levelInput;
     private EditBox itemCountInput;
     private EditBox priceInput;
-    private CycleButton<Integer> delayCycleButton;
     private CycleButton<Integer> modeCycleButton;
 
     private List<String> enchantmentSuggestions = List.of();
@@ -43,7 +42,6 @@ public class ConfigScreen extends Screen {
     private List<FilterEntry> filters = new ArrayList<>();
     private final List<FilterEntry> originalFilters = new ArrayList<>();
     private boolean originalMatchAny;
-    private int originalDelay;
     private CycleButton<Boolean> matchModeCycleButton;
     private boolean matchAny = true;
     private boolean saved = false;
@@ -52,11 +50,6 @@ public class ConfigScreen extends Screen {
     private static final int INPUT_HEIGHT = 20;
     private static final int BUTTON_HEIGHT = 20;
     private static final int FILTER_ITEM_HEIGHT = 25;
-
-    private static final Component DELAY_TOOLTIP = Component.translatable("gui.easyautocycler.config.delay.tooltip",
-                    AutomationManager.MIN_CLICK_DELAY, AutomationManager.MAX_CLICK_DELAY)
-            .withStyle(ChatFormatting.GRAY);
-
 
     public ConfigScreen(@Nullable Screen previousScreen, Component title) {
         super(title);
@@ -67,7 +60,6 @@ public class ConfigScreen extends Screen {
         this.originalFilters.clear();
         this.originalFilters.addAll(this.filters.stream().map(FilterEntry::new).collect(java.util.stream.Collectors.toList()));
         this.originalMatchAny = AutomationManager.INSTANCE.isMatchAny();
-        this.originalDelay = AutomationManager.INSTANCE.getClickDelay();
         this.matchAny = AutomationManager.INSTANCE.isMatchAny();
     }
 
@@ -94,9 +86,6 @@ public class ConfigScreen extends Screen {
         
         // Start with proper spacing for title
         int currentY = PADDING * 4 + 10; // More space for title
-
-        // Get current configuration  
-        int currentDelay = AutomationManager.INSTANCE.getClickDelay();
 
         // Filter management section - center the two buttons properly
         int topButtonWidth = 120; // Slightly wider for better text fit
@@ -131,32 +120,17 @@ public class ConfigScreen extends Screen {
 
         // Calculate better spacing for bottom elements
         int bottomMargin = PADDING + 5; // Space from screen bottom
-        int delayButtonY = this.height - bottomMargin - BUTTON_HEIGHT; // Done button position
-        int saveButtonY = delayButtonY - BUTTON_HEIGHT - PADDING; // Save/Clear buttons
-        int delayY = saveButtonY - BUTTON_HEIGHT - PADDING; // Delay button
+        int doneButtonY = this.height - bottomMargin - BUTTON_HEIGHT;
+        int saveButtonY = doneButtonY - BUTTON_HEIGHT - PADDING;
         
         // Scrollable container for filters - calculate remaining space
-        int containerHeight = delayY - currentY - PADDING;
+        int containerHeight = saveButtonY - currentY - PADDING;
         filtersContainer = new ScrollableContainer(
             guiLeft, 
             currentY, 
             inputWidthFull, 
             containerHeight);
         this.addRenderableWidget(filtersContainer);
-
-        // Delay button (positioned above Save/Clear buttons)
-        this.delayCycleButton = CycleButton.<Integer>builder(value -> 
-            Component.translatable("gui.easyautocycler.config.delay.value", value))
-                .withValues(AutomationManager.MIN_CLICK_DELAY, 2, 3, 4, 5)
-                .withInitialValue(currentDelay)
-                .displayOnlyValue()
-                .create(guiLeft, delayY, inputWidthFull, BUTTON_HEIGHT,
-                        Component.translatable("gui.easyautocycler.config.delay"),
-                        (cycleButton, newValue) -> {
-                            AutomationManager.INSTANCE.configureSpeed(newValue);
-                        });
-
-        this.addRenderableWidget(this.delayCycleButton);
 
         // Save and Clear buttons
         int bottomButtonWidth = (inputWidthFull - PADDING) / 2;
@@ -167,7 +141,7 @@ public class ConfigScreen extends Screen {
         
         // Cancel button (at bottom with proper margin)
         this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> this.onClose())
-            .pos(guiLeft, delayButtonY).size(inputWidthFull, BUTTON_HEIGHT).build());
+            .pos(guiLeft, doneButtonY).size(inputWidthFull, BUTTON_HEIGHT).build());
             
         // Populate the filter list
         refreshFiltersList();
@@ -199,16 +173,6 @@ public class ConfigScreen extends Screen {
         super.render(guiGraphics, mouseX, mouseY, partialTick); // Renders widgets
         guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, PADDING * 2, 0xFFFFFF);
 
-        int labelYOffset = -12; // Slightly more space above button
-        // Only draw delay label if it won't overlap with filter container
-        int delayLabelY = this.delayCycleButton.getY() + labelYOffset;
-        int containerBottomY = filtersContainer.getY() + filtersContainer.getHeight();
-        
-        if (delayLabelY > containerBottomY + 5) { // 5px clearance
-            guiGraphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.delay"), 
-                this.delayCycleButton.getX(), delayLabelY, 0xA0A0A0);
-        }
-        
         // If no filters, display a message
         if (filters.isEmpty()) {
             Component noFiltersMsg = Component.translatable("gui.easyautocycler.filters.no_filters")
@@ -225,9 +189,6 @@ public class ConfigScreen extends Screen {
                 0xAAAAAA);
         }
 
-        if (this.delayCycleButton != null && this.delayCycleButton.isHovered() && this.delayCycleButton.active) {
-            guiGraphics.renderTooltip(this.font, DELAY_TOOLTIP, mouseX, mouseY);
-        }
     }
 
     private void onSave(Button button) {
@@ -248,15 +209,12 @@ public class ConfigScreen extends Screen {
 
 
     private void onClear(Button button) {
-        int defaultDelay = AutomationManager.DEFAULT_CLICK_DELAY;
-
         // Clear only local/UI state. Persistence happens on Save.
         filters.clear();
         refreshFiltersList();
 
         // Reset UI controls
         if (this.matchModeCycleButton != null) this.matchModeCycleButton.setValue(true);
-        if (this.delayCycleButton != null) this.delayCycleButton.setValue(defaultDelay);
 
         this.sendMessageToPlayer(Component.literal("Configuration cleared (unsaved).").withStyle(ChatFormatting.YELLOW));
     }
@@ -272,7 +230,6 @@ public class ConfigScreen extends Screen {
         if (!this.saved) {
             AutomationManager.INSTANCE.setMatchAny(this.originalMatchAny);
             AutomationManager.INSTANCE.setFilterEntries(this.originalFilters.stream().map(FilterEntry::new).collect(java.util.stream.Collectors.toList()));
-            AutomationManager.INSTANCE.configureSpeed(this.originalDelay);
         }
 
         if (this.minecraft != null) { 

@@ -28,9 +28,6 @@
 
   "gui.easyautocycler.button.config.tooltip": "Configure Auto Cycler",
   "gui.easyautocycler.button.toggle.tooltip": "Toggle Auto Cycling",
-  "gui.easyautocycler.config.delay": "Cycle Delay (Ticks)",
-  "gui.easyautocycler.config.delay.value": "%s Ticks",
-  "gui.easyautocycler.config.delay.tooltip": "Delay between cycles (%s-%s ticks). Lower = Faster. Very low values may cause issues on servers! 2 is recommended.",
 
   "chat.easyautocycler.started": "Started auto trade cycling.",
   "chat.easyautocycler.stopped.reason": "Stopped auto trade cycling: %s",  "chat.easyautocycler.found": "§aTarget trade found!",

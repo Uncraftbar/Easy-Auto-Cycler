@@ -6,9 +6,11 @@ import com.uncraftbar.easyautocycler.filter.FilterEntry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -25,6 +27,7 @@ public class ConfigScreen extends Screen {
     @Nullable
     private final Screen previousScreen;
 
+    private FilterListWidget filterListWidget;
     private List<String> enchantmentSuggestions = List.of();
     private List<String> itemSuggestions = List.of();
 
@@ -117,17 +120,10 @@ public class ConfigScreen extends Screen {
         int cancelButtonY = this.height - bottomMargin - BUTTON_HEIGHT;
         int saveButtonY = cancelButtonY - BUTTON_HEIGHT - PADDING;
 
-        int filtersListStartY = currentY;
-        int filtersListMaxHeight = saveButtonY - currentY - PADDING;
-        int maxFiltersShown = Math.max(1, filtersListMaxHeight / FILTER_ROW_HEIGHT);
-
-        int filterRowWidth = contentWidth;
-        int visibleFilters = Math.min(filters.size(), maxFiltersShown);
-        for (int i = 0; i < visibleFilters; i++) {
-            FilterEntry filter = filters.get(i);
-            int rowY = filtersListStartY + (i * FILTER_ROW_HEIGHT);
-            addFilterRowWidgets(filter, guiLeft, rowY, filterRowWidth);
-        }
+        int filtersListHeight = saveButtonY - currentY - PADDING;
+        this.filterListWidget = new FilterListWidget(this.minecraft, guiLeft, currentY, contentWidth, filtersListHeight);
+        refreshFiltersList();
+        this.addRenderableWidget(this.filterListWidget);
 
         int bottomButtonWidth = (contentWidth - PADDING) / 2;
         this.addRenderableWidget(Button.builder(Component.translatable("gui.easyautocycler.config.save"), this::onSave)
@@ -137,38 +133,6 @@ public class ConfigScreen extends Screen {
 
         this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> this.onClose())
                 .pos(guiLeft, cancelButtonY).size(contentWidth, BUTTON_HEIGHT).build());
-    }
-
-    private void addFilterRowWidgets(FilterEntry filter, int rowX, int rowY, int rowWidth) {
-        CycleButton<Boolean> toggleButton = CycleButton.<Boolean>builder(value ->
-                        Component.literal(value ? "✓" : "✗")
-                                .withStyle(value ? ChatFormatting.GREEN : ChatFormatting.RED),
-                        filter.isEnabled())
-                .withValues(true, false)
-                .displayOnlyValue()
-                .create(rowX + 2, rowY, 20, 20,
-                        Component.empty(),
-                        (cycleButton, newValue) -> filter.setEnabled(newValue));
-        this.addRenderableWidget(toggleButton);
-
-        AbstractWidget filterButton = Button.builder(
-                        filter.getDisplayName(),
-                        button -> openFilterEditor(filter))
-                .pos(rowX + 26, rowY)
-                .size(rowWidth - 52, 20)
-                .build();
-        this.addRenderableWidget(filterButton);
-
-        AbstractWidget deleteButton = Button.builder(
-                        Component.literal("X").withStyle(ChatFormatting.RED),
-                        button -> {
-                            filters.remove(filter);
-                            this.rebuildWidgets();
-                        })
-                .pos(rowX + rowWidth - 22, rowY)
-                .size(20, 20)
-                .build();
-        this.addRenderableWidget(deleteButton);
     }
 
     @Override
@@ -185,28 +149,6 @@ public class ConfigScreen extends Screen {
             graphics.drawString(this.font, noFiltersMsg, msgX, msgY, 0xFFAAAAAA, true);
         }
 
-        int hiddenCount = filters.size() - visibleFilterCount();
-        if (hiddenCount > 0) {
-            Component moreMsg = Component.translatable("gui.easyautocycler.filters.more", hiddenCount)
-                    .withStyle(ChatFormatting.GRAY);
-            int msgX = this.width / 2 - this.font.width(moreMsg) / 2;
-            int msgY = this.height - (PADDING + 5) - (BUTTON_HEIGHT * 2) - PADDING - 14;
-            graphics.drawString(this.font, moreMsg, msgX, msgY, 0xFFAAAAAA, true);
-        }
-    }
-
-    private int visibleFilterCount() {
-        int filtersListMaxHeight = computeFiltersListMaxHeight();
-        int maxFiltersShown = Math.max(1, filtersListMaxHeight / FILTER_ROW_HEIGHT);
-        return Math.min(filters.size(), maxFiltersShown);
-    }
-
-    private int computeFiltersListMaxHeight() {
-        int topSectionBottom = PADDING * 4 + 10 + BUTTON_HEIGHT + PADDING + 5;
-        int bottomMargin = PADDING + 5;
-        int cancelButtonY = this.height - bottomMargin - BUTTON_HEIGHT;
-        int saveButtonY = cancelButtonY - BUTTON_HEIGHT - PADDING;
-        return saveButtonY - topSectionBottom - PADDING;
     }
 
     private void onSave(Button button) {
@@ -220,7 +162,7 @@ public class ConfigScreen extends Screen {
 
     private void onClear(Button button) {
         filters.clear();
-        this.rebuildWidgets();
+        refreshFiltersList();
 
         if (this.matchModeCycleButton != null) this.matchModeCycleButton.setValue(true);
 
@@ -255,7 +197,7 @@ public class ConfigScreen extends Screen {
             FilterEntry newFilter = new FilterEntry();
             FilterEditorScreen editorScreen = new FilterEditorScreen(this, newFilter, enchantmentSuggestions, itemSuggestions, index -> {
                 filters.add(newFilter);
-                this.rebuildWidgets();
+                refreshFiltersList();
             });
             Minecraft.getInstance().setScreen(editorScreen);
         } else {
@@ -264,9 +206,94 @@ public class ConfigScreen extends Screen {
                 FilterEntry filterCopy = new FilterEntry(filterToEdit);
                 FilterEditorScreen editorScreen = new FilterEditorScreen(this, filterCopy, enchantmentSuggestions, itemSuggestions, index -> {
                     filters.set(filterIndex, filterCopy);
-                    this.rebuildWidgets();
+                    refreshFiltersList();
                 });
                 Minecraft.getInstance().setScreen(editorScreen);
+            }
+        }
+    }
+
+    private void refreshFiltersList() {
+        if (this.filterListWidget == null) {
+            return;
+        }
+
+        this.filterListWidget.replaceEntries(filters.stream()
+                .map(filter -> new FilterListWidget.FilterEntryRow(filter, this::openFilterEditor, removedFilter -> {
+                    filters.remove(removedFilter);
+                    refreshFiltersList();
+                }))
+                .collect(Collectors.toList()));
+    }
+
+    private static class FilterListWidget extends ContainerObjectSelectionList<FilterListWidget.FilterEntryRow> {
+        private static final int SCROLLBAR_WIDTH_WITH_PADDING = 12;
+        private final int rowWidth;
+
+        FilterListWidget(Minecraft minecraft, int x, int y, int width, int height) {
+            super(minecraft, width, height, y, FILTER_ROW_HEIGHT);
+            this.rowWidth = width - SCROLLBAR_WIDTH_WITH_PADDING;
+            this.updateSizeAndPosition(width, height, x, y);
+            this.centerListVertically = false;
+        }
+
+        @Override
+        public int getRowWidth() {
+            return this.rowWidth;
+        }
+
+        @Override
+        protected int scrollBarX() {
+            return this.getRight() - (SCROLLBAR_WIDTH_WITH_PADDING / 2);
+        }
+
+        private static class FilterEntryRow extends ContainerObjectSelectionList.Entry<FilterEntryRow> {
+            private final CycleButton<Boolean> toggleButton;
+            private final Button filterButton;
+            private final Button deleteButton;
+
+            FilterEntryRow(FilterEntry filter, java.util.function.Consumer<FilterEntry> editAction, java.util.function.Consumer<FilterEntry> deleteAction) {
+                this.toggleButton = CycleButton.<Boolean>builder(value ->
+                                Component.literal(value ? "\u2713" : "\u2717")
+                                        .withStyle(value ? ChatFormatting.GREEN : ChatFormatting.RED),
+                                filter.isEnabled())
+                        .withValues(true, false)
+                        .displayOnlyValue()
+                        .create(0, 0, 20, 20, Component.empty(), (cycleButton, newValue) -> filter.setEnabled(newValue));
+                this.filterButton = Button.builder(filter.getDisplayName(), button -> editAction.accept(filter))
+                        .pos(0, 0)
+                        .size(100, 20)
+                        .build();
+                this.deleteButton = Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), button -> deleteAction.accept(filter))
+                        .pos(0, 0)
+                        .size(20, 20)
+                        .build();
+            }
+
+            @Override
+            public void renderContent(GuiGraphics graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+                int y = this.getContentY() - 1;
+                this.toggleButton.setPosition(this.getContentX(), y);
+                this.toggleButton.render(graphics, mouseX, mouseY, partialTick);
+
+                this.deleteButton.setPosition(this.getContentRight() - this.deleteButton.getWidth(), y);
+                this.deleteButton.render(graphics, mouseX, mouseY, partialTick);
+
+                int filterButtonX = this.toggleButton.getRight() + PADDING;
+                int filterButtonRight = this.deleteButton.getX() - PADDING;
+                this.filterButton.setPosition(filterButtonX, y);
+                this.filterButton.setWidth(filterButtonRight - filterButtonX);
+                this.filterButton.render(graphics, mouseX, mouseY, partialTick);
+            }
+
+            @Override
+            public List<? extends GuiEventListener> children() {
+                return List.of(this.toggleButton, this.filterButton, this.deleteButton);
+            }
+
+            @Override
+            public List<? extends NarratableEntry> narratables() {
+                return List.of(this.toggleButton, this.filterButton, this.deleteButton);
             }
         }
     }

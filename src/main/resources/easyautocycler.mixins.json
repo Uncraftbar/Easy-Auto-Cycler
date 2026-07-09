@@ -1,8 +1,10 @@
 {
-  "required": false,
+  "required": true,
   "package": "com.uncraftbar.easyautocycler.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": [],
+  "client": [
+    "ClientPacketListenerMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

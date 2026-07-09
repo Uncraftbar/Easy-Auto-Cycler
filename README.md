@@ -21,6 +21,10 @@ A powerful client-side Minecraft mod that automates villager trade cycling. Set 
 
 | Branch | Loader | MC Version | Supported Mods |
 |--------|--------|------------|----------------|
+| [`neoforge-26.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.2) | NeoForge | 26.2 | Easy Villagers, Trade Cycling |
+| [`fabric-26.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-26.2) | Fabric | 26.2 | Trade Cycling |
+| [`neoforge-26.1.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.1.2) | NeoForge | 26.1.2 | Easy Villagers, Trade Cycling |
+| [`fabric-26.1.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-26.1.2) | Fabric | 26.1.2 | Trade Cycling |
 | [`neoforge-1.21.11`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-1.21.11) | NeoForge | 1.21.11 | Easy Villagers, Trade Cycling |
 | [`fabric-1.21.11`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-1.21.11) | Fabric | 1.21.11 | Trade Cycling |
 | [`neoforge-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-1.21.1) | NeoForge | 1.21.1 | Easy Villagers, Trade Cycling |
@@ -41,3 +45,7 @@ For downloads, check the [Releases](https://github.com/Uncraftbar/Easy-Auto-Cycl
 5. The mod stops automatically when a match is found
 
 See each branch's README for version-specific details.
+
+## Publishing releases
+
+The manually triggered **Publish release** GitHub Actions workflow builds every supported branch and publishes matching releases to Modrinth and CurseForge. It defaults to a safe dry run; see [`release/README.md`](release/README.md) for token setup and the release process.

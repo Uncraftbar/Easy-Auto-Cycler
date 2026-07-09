@@ -1,0 +1,72 @@
+plugins {
+    id "base"
+    id "me.modmuss50.mod-publish-plugin" version "2.1.1"
+}
+
+def releaseVersion = providers.gradleProperty("releaseVersion").orElse("3.0.0")
+def dryRunEnabled = providers.gradleProperty("dryRun").map { it.toBoolean() }.orElse(true)
+def changelogText = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText
+def artifactsDirectory = layout.projectDirectory.dir("artifacts")
+def modrinthToken = providers.environmentVariable("MODRINTH_TOKEN")
+def curseforgeToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+
+def releases = [
+        [key: "fabric_1_20_1",    loader: "fabric",   minecraft: "1.20.1"],
+        [key: "forge_1_20_1",     loader: "forge",    minecraft: "1.20.1"],
+        [key: "fabric_1_21_1",    loader: "fabric",   minecraft: "1.21.1"],
+        [key: "neoforge_1_21_1",  loader: "neoforge", minecraft: "1.21.1"],
+        [key: "fabric_1_21_11",   loader: "fabric",   minecraft: "1.21.11"],
+        [key: "neoforge_1_21_11", loader: "neoforge", minecraft: "1.21.11"],
+        [key: "fabric_26_1_2",    loader: "fabric",   minecraft: "26.1.2"],
+        [key: "neoforge_26_1_2",  loader: "neoforge", minecraft: "26.1.2"],
+        [key: "fabric_26_2",      loader: "fabric",   minecraft: "26.2"],
+        [key: "neoforge_26_2",    loader: "neoforge", minecraft: "26.2"]
+]
+
+publishMods {
+    changelog = changelogText
+    version = releaseVersion
+    type = STABLE
+    dryRun = dryRunEnabled
+    maxRetries = 5
+
+    releases.each { release ->
+        def artifactName = "easyautocycler-${release.loader}-${release.minecraft}-${releaseVersion.get()}.jar"
+        def releaseTitle = releaseVersion.map {
+            "Easy Auto Cycler ${it} ${release.minecraft} ${release.loader == 'neoforge' ? 'NeoForge' : release.loader.capitalize()}"
+        }
+
+        modrinth("modrinth_${release.key}") {
+            accessToken = modrinthToken
+            projectId = "easy-auto-cycler"
+            file = artifactsDirectory.file(artifactName)
+            displayName = releaseTitle
+            modLoaders.add(release.loader)
+            minecraftVersions.add(release.minecraft)
+            environment = CLIENT_ONLY
+
+            if (release.loader == "fabric") {
+                requires("trade-cycling")
+            } else {
+                optional("easy-villagers", "trade-cycling")
+            }
+        }
+
+        curseforge("curseforge_${release.key}") {
+            accessToken = curseforgeToken
+            projectId = "1242344"
+            file = artifactsDirectory.file(artifactName)
+            displayName = releaseTitle
+            modLoaders.add(release.loader)
+            minecraftVersions.add(release.minecraft)
+            client = true
+            server = false
+
+            if (release.loader == "fabric") {
+                requires("trade-cycling")
+            } else {
+                optional("easy-villagers", "trade-cycling")
+            }
+        }
+    }
+}

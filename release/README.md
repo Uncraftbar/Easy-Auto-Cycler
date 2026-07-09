@@ -1,0 +1,28 @@
+# Automated publishing
+
+The `Publish release` GitHub Actions workflow builds all supported branches and publishes their jars to Modrinth and CurseForge with the same version, title, changelog, loader, game-version, and dependency metadata.
+
+## Required repository secrets
+
+- `MODRINTH_TOKEN`: a Modrinth personal access token with Create versions, Read versions, and Write versions scopes.
+- `CURSEFORGE_TOKEN`: a CurseForge API token.
+
+## Release process
+
+1. Push the prepared release commits on `main` and every supported release branch.
+2. Open **Actions → Publish release → Run workflow**.
+3. Leave `publish` disabled for the first run. The workflow builds all ten jars and performs a Mod Publish Plugin dry run.
+4. Inspect the successful dry run and its artifacts.
+5. Run the workflow again with `publish` enabled to upload all ten releases.
+
+The publisher defaults to dry-run mode even when invoked locally:
+
+```text
+./release/gradlew -p release publishMods -PreleaseVersion=3.0.0
+```
+
+Actual local publication requires both token environment variables and an explicit opt-out from dry-run mode:
+
+```text
+./release/gradlew -p release publishMods -PreleaseVersion=3.0.0 -PdryRun=false
+```

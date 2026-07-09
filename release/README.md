@@ -15,6 +15,8 @@ The `Publish release` GitHub Actions workflow builds all supported branches and 
 4. Inspect the successful dry run and its artifacts.
 5. Run the workflow again with `publish` enabled to upload all ten releases.
 
+The `destination` input normally stays set to `all`. Select `modrinth` or `curseforge` to safely retry only one platform after a partial platform outage or API failure.
+
 The publisher defaults to dry-run mode even when invoked locally:
 
 ```text

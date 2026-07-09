@@ -38,7 +38,7 @@ publishMods {
 
         modrinth("modrinth_${release.key}") {
             accessToken = modrinthToken
-            projectId = "easy-auto-cycler"
+            projectId = "L1k78Y2G"
             file = artifactsDirectory.file(artifactName)
             displayName = releaseTitle
             modLoaders.add(release.loader)
@@ -69,4 +69,16 @@ publishMods {
             }
         }
     }
+}
+
+tasks.register("publishModrinthAll") {
+    group = "publishing"
+    description = "Publishes every configured Modrinth release."
+    dependsOn tasks.matching { it.name.startsWith("publishModrinth_") }
+}
+
+tasks.register("publishCurseforgeAll") {
+    group = "publishing"
+    description = "Publishes every configured CurseForge release."
+    dependsOn tasks.matching { it.name.startsWith("publishCurseforge_") }
 }

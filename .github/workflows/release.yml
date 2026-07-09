@@ -13,6 +13,15 @@ on:
         required: true
         default: false
         type: boolean
+      destination:
+        description: Destinations to validate or publish
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - modrinth
+          - curseforge
 
 permissions:
   contents: read
@@ -146,7 +155,13 @@ jobs:
           if [[ "${{ inputs.publish }}" == "true" ]]; then
             dry_run=false
           fi
-          ./release/gradlew -p release --no-daemon publishMods \
+          publish_task=publishMods
+          if [[ "${{ inputs.destination }}" == "modrinth" ]]; then
+            publish_task=publishModrinthAll
+          elif [[ "${{ inputs.destination }}" == "curseforge" ]]; then
+            publish_task=publishCurseforgeAll
+          fi
+          ./release/gradlew -p release --no-daemon "$publish_task" \
             -PreleaseVersion="${{ inputs.version }}" \
             -PdryRun="$dry_run"
 

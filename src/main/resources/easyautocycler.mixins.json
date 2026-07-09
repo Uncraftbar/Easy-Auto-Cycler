@@ -1,9 +1,10 @@
 {
-  "required": false,
+  "required": true,
   "package": "com.uncraftbar.easyautocycler.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "MinecraftTickMixin"
+    "MinecraftTickMixin",
+    "ClientPacketListenerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

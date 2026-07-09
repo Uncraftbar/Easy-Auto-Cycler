@@ -25,15 +25,12 @@ public class ConfigScreen extends Screen {
     @Nullable
     private final Screen previousScreen;
 
-    private CycleButton<Integer> delayCycleButton;
-
     private List<String> enchantmentSuggestions = List.of();
     private List<String> itemSuggestions = List.of();
 
     private List<FilterEntry> filters = new ArrayList<>();
     private final List<FilterEntry> originalFilters = new ArrayList<>();
     private boolean originalMatchAny;
-    private int originalDelay;
     private CycleButton<Boolean> matchModeCycleButton;
     private boolean matchAny = true;
     private boolean saved = false;
@@ -50,7 +47,6 @@ public class ConfigScreen extends Screen {
         this.originalFilters.clear();
         this.originalFilters.addAll(this.filters.stream().map(FilterEntry::new).collect(Collectors.toList()));
         this.originalMatchAny = AutomationManager.INSTANCE.isMatchAny();
-        this.originalDelay = AutomationManager.INSTANCE.getClickDelay();
         this.matchAny = AutomationManager.INSTANCE.isMatchAny();
     }
 
@@ -92,8 +88,6 @@ public class ConfigScreen extends Screen {
         int guiLeft = (this.width - contentWidth) / 2;
         int currentY = PADDING * 4 + 10;
 
-        int currentDelay = AutomationManager.INSTANCE.getClickDelay();
-
         int topButtonWidth = 120;
         int buttonSpacing = 10;
         int totalButtonsWidth = (topButtonWidth * 2) + buttonSpacing;
@@ -122,10 +116,9 @@ public class ConfigScreen extends Screen {
         int bottomMargin = PADDING + 5;
         int cancelButtonY = this.height - bottomMargin - BUTTON_HEIGHT;
         int saveButtonY = cancelButtonY - BUTTON_HEIGHT - PADDING;
-        int delayY = saveButtonY - BUTTON_HEIGHT - PADDING;
 
         int filtersListStartY = currentY;
-        int filtersListMaxHeight = delayY - currentY - PADDING;
+        int filtersListMaxHeight = saveButtonY - currentY - PADDING;
         int maxFiltersShown = Math.max(1, filtersListMaxHeight / FILTER_ROW_HEIGHT);
 
         int filterRowWidth = contentWidth;
@@ -135,15 +128,6 @@ public class ConfigScreen extends Screen {
             int rowY = filtersListStartY + (i * FILTER_ROW_HEIGHT);
             addFilterRowWidgets(filter, guiLeft, rowY, filterRowWidth);
         }
-
-        this.delayCycleButton = CycleButton.<Integer>builder(value ->
-                        Component.translatable("gui.easyautocycler.config.delay.value", value), currentDelay)
-                .withValues(AutomationManager.MIN_CLICK_DELAY, 2, 3, 4, 5)
-                .displayOnlyValue()
-                .create(guiLeft, delayY, contentWidth, BUTTON_HEIGHT,
-                        Component.translatable("gui.easyautocycler.config.delay"),
-                        (cycleButton, newValue) -> AutomationManager.INSTANCE.configureSpeed(newValue));
-        this.addRenderableWidget(this.delayCycleButton);
 
         int bottomButtonWidth = (contentWidth - PADDING) / 2;
         this.addRenderableWidget(Button.builder(Component.translatable("gui.easyautocycler.config.save"), this::onSave)
@@ -206,7 +190,7 @@ public class ConfigScreen extends Screen {
             Component moreMsg = Component.translatable("gui.easyautocycler.filters.more", hiddenCount)
                     .withStyle(ChatFormatting.GRAY);
             int msgX = this.width / 2 - this.font.width(moreMsg) / 2;
-            int msgY = this.delayCycleButton.getY() - 14;
+            int msgY = this.height - (PADDING + 5) - (BUTTON_HEIGHT * 2) - PADDING - 14;
             graphics.drawString(this.font, moreMsg, msgX, msgY, 0xFFAAAAAA, true);
         }
     }
@@ -222,8 +206,7 @@ public class ConfigScreen extends Screen {
         int bottomMargin = PADDING + 5;
         int cancelButtonY = this.height - bottomMargin - BUTTON_HEIGHT;
         int saveButtonY = cancelButtonY - BUTTON_HEIGHT - PADDING;
-        int delayY = saveButtonY - BUTTON_HEIGHT - PADDING;
-        return delayY - topSectionBottom - PADDING;
+        return saveButtonY - topSectionBottom - PADDING;
     }
 
     private void onSave(Button button) {
@@ -236,12 +219,10 @@ public class ConfigScreen extends Screen {
     }
 
     private void onClear(Button button) {
-        int defaultDelay = AutomationManager.DEFAULT_CLICK_DELAY;
         filters.clear();
         this.rebuildWidgets();
 
         if (this.matchModeCycleButton != null) this.matchModeCycleButton.setValue(true);
-        if (this.delayCycleButton != null) this.delayCycleButton.setValue(defaultDelay);
 
         this.sendMessageToPlayer(Component.literal("Configuration cleared (unsaved).").withStyle(ChatFormatting.YELLOW));
     }
@@ -257,7 +238,6 @@ public class ConfigScreen extends Screen {
         if (!this.saved) {
             AutomationManager.INSTANCE.setMatchAny(this.originalMatchAny);
             AutomationManager.INSTANCE.setFilterEntries(this.originalFilters.stream().map(FilterEntry::new).collect(Collectors.toList()));
-            AutomationManager.INSTANCE.configureSpeed(this.originalDelay);
         }
 
         if (this.minecraft != null) {

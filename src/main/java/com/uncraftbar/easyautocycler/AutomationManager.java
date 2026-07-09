@@ -42,9 +42,11 @@ public class AutomationManager {
     }
 
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
-    private int delayTicks = 0;
+    private boolean waitingForOfferUpdate = false;
+    private int waitingForOfferTicks = 0;
     private int currentCycles = 0;
     private static final int MAX_CYCLES_SAFETY = 3000;
+    private static final int OFFER_UPDATE_TIMEOUT_TICKS = 100;
 
     // Mod integration state
     private static boolean initialized = false;
@@ -72,13 +74,15 @@ public class AutomationManager {
             }
         }
 
-        public void sendCyclePacket() {
+        public boolean sendCyclePacket() {
             try {
                 Object packet = packetConstructor.newInstance();
                 ClientPlayNetworking.send((CustomPacketPayload) packet);
                 EasyAutoCyclerMod.LOGGER.trace("Sent Trade Cycling cycle packet");
+                return true;
             } catch (Exception e) {
                 EasyAutoCyclerMod.LOGGER.error("Failed to send Trade Cycling packet", e);
+                return false;
             }
         }
     }
@@ -109,10 +113,6 @@ public class AutomationManager {
         }
     }
 
-    public static final int DEFAULT_CLICK_DELAY = 2;
-    public static final int MIN_CLICK_DELAY = 1;
-    public static final int MAX_CLICK_DELAY = 5;
-    
     // Mode constants for cycling
     public static final int MODE_ENCHANTMENT = 0;
     public static final int MODE_ITEM = 1;
@@ -124,7 +124,6 @@ public class AutomationManager {
     @Nullable private ResourceLocation targetItemId = null;
     private int maxEmeraldCost = 64;
     private int targetLevel = 1;
-    private int clickDelay = DEFAULT_CLICK_DELAY;
     private int targetItemCount = 1;
     
     // New multi-filter system
@@ -140,7 +139,6 @@ public class AutomationManager {
     @Nullable public ResourceLocation getTargetItemId() { return targetItemId; }
     public int getMaxEmeraldCost() { return maxEmeraldCost; }
     public int getTargetLevel() { return targetLevel; }
-    public int getClickDelay() { return clickDelay; }
     public int getCycleMode() { return cycleMode; }
     public int getTargetItemCount() { return targetItemCount; }
 
@@ -234,12 +232,6 @@ public class AutomationManager {
         }
     }
 
-    public void configureSpeed(int delay) {
-        this.clickDelay = Math.max(MIN_CLICK_DELAY, Math.min(MAX_CLICK_DELAY, delay));
-        String message = String.format("Set cycle delay to %d ticks.", this.clickDelay);
-        EasyAutoCyclerMod.LOGGER.info(message);
-    }
-
     public void clearTarget() {
         this.targetEnchantment = null;
         this.targetEnchantmentId = null;
@@ -277,11 +269,13 @@ public class AutomationManager {
         }
         
         if (isRunning.compareAndSet(false, true)) {
-            EasyAutoCyclerMod.LOGGER.debug("Starting villager trade cycling. Delay: {} ticks.", this.clickDelay);
+            EasyAutoCyclerMod.LOGGER.debug("Starting network-synchronized villager trade cycling.");
             this.sendMessageToPlayer(Component.literal("Auto-cycling started. Press button again to stop."));
-            this.delayTicks = 0;
+            this.waitingForOfferUpdate = false;
+            this.waitingForOfferTicks = 0;
             this.currentCycles = 0;
             this.lastMatchedFilter = null;
+            evaluateAndMaybeCycle((MerchantScreen) currentScreen);
         }
         
         // Check if we have any enabled filters or legacy targets
@@ -297,6 +291,8 @@ public class AutomationManager {
 
     public void stop(String reason) { 
         if (isRunning.compareAndSet(true, false)) { 
+            waitingForOfferUpdate = false;
+            waitingForOfferTicks = 0;
             EasyAutoCyclerMod.LOGGER.debug("Stopping villager trade cycling. Reason: {}", reason); 
         } 
     }
@@ -309,26 +305,34 @@ public class AutomationManager {
             return; 
         }
         
-        currentCycles++; 
-        if (currentCycles > MAX_CYCLES_SAFETY) {
-            EasyAutoCyclerMod.LOGGER.debug("Max cycles safety limit reached!");
-            this.sendMessageToPlayer(Component.literal("§cMax cycles safety limit reached!"));
-            try { 
-                Minecraft mc = Minecraft.getInstance();
-                if (mc != null && mc.getSoundManager() != null) {
-                    mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS, 1.0F)); 
-                } 
-            } catch (Exception e) { 
-                EasyAutoCyclerMod.LOGGER.error("Failed to play 'trade found' sound effect", e); 
-            } 
-            stop("Max cycles safety limit reached!"); 
+        if (waitingForOfferUpdate) {
+            waitingForOfferTicks++;
+            if (waitingForOfferTicks >= OFFER_UPDATE_TIMEOUT_TICKS) {
+                this.sendMessageToPlayer(Component.literal("§cTimed out waiting for updated villager trades."));
+                EasyAutoCyclerMod.LOGGER.warn("No merchant-offers acknowledgement received after {} ticks", OFFER_UPDATE_TIMEOUT_TICKS);
+                stop("Merchant offers update timed out");
+            }
             return; 
         }
-        
-        if (delayTicks > 0) { 
-            delayTicks--; 
-            return; 
+
+        evaluateAndMaybeCycle(screen);
+    }
+
+    public void onMerchantOffersUpdated(int containerId) {
+        if (!isRunning.get() || !waitingForOfferUpdate) return;
+        if (!(Minecraft.getInstance().screen instanceof MerchantScreen screen)) {
+            stop("Screen closed");
+            return;
         }
+        if (screen.getMenu().containerId != containerId) return;
+
+        waitingForOfferUpdate = false;
+        waitingForOfferTicks = 0;
+        evaluateAndMaybeCycle(screen);
+    }
+
+    private void evaluateAndMaybeCycle(MerchantScreen screen) {
+        if (!isRunning.get() || waitingForOfferUpdate) return;
 
         MerchantOffers offers = screen.getMenu().getOffers();
         
@@ -366,12 +370,25 @@ public class AutomationManager {
         }
         
         if (canCycleTrades(screen.getMenu())) {
-            try {
-                EasyAutoCyclerMod.LOGGER.trace("Conditions met, sending cycle trades packet (Cycle {})", currentCycles);
-                sendCyclePacket();
-                delayTicks = this.clickDelay;
-            } catch(Exception e) {
-                EasyAutoCyclerMod.LOGGER.error("Failed to send cycle trades packet!", e);
+            if (currentCycles >= MAX_CYCLES_SAFETY) {
+                this.sendMessageToPlayer(Component.literal("§cMax cycles safety limit reached!"));
+                try {
+                    Minecraft mc = Minecraft.getInstance();
+                    if (mc != null && mc.getSoundManager() != null) {
+                        mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS, 1.0F));
+                    }
+                } catch (Exception e) {
+                    EasyAutoCyclerMod.LOGGER.error("Failed to play safety-limit sound effect", e);
+                }
+                stop("Max cycles safety limit reached!");
+                return;
+            }
+
+            waitingForOfferUpdate = true;
+            waitingForOfferTicks = 0;
+            currentCycles++;
+            if (!sendCyclePacket()) {
+                waitingForOfferUpdate = false;
                 stop("Network error");
             }
         } else {
@@ -396,10 +413,11 @@ public class AutomationManager {
     /**
      * Send the cycle trades packet using Trade Cycling.
      */
-    private void sendCyclePacket() {
+    private boolean sendCyclePacket() {
         if (tradeCyclingLoaded && tradeCyclingHandler != null) {
-            ((TradeCyclingHandler) tradeCyclingHandler).sendCyclePacket();
+            return ((TradeCyclingHandler) tradeCyclingHandler).sendCyclePacket();
         }
+        return false;
     }
 
     private boolean checkTradesForEnchantment(MerchantOffers offers) {

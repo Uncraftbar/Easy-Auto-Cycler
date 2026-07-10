@@ -9,7 +9,7 @@ on:
         default: 3.1.0
         type: string
       publish:
-        description: Upload to Modrinth and CurseForge (disabled means dry run)
+        description: Upload to Modrinth, CurseForge, and GitHub Releases (disabled means dry run)
         required: true
         default: false
         type: boolean
@@ -24,7 +24,7 @@ on:
           - curseforge
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: easy-auto-cycler-release
@@ -164,6 +164,24 @@ jobs:
           ./release/gradlew -p release --no-daemon "$publish_task" \
             -PreleaseVersion="${{ inputs.version }}" \
             -PdryRun="$dry_run"
+
+      - name: Create or update GitHub Release
+        if: ${{ inputs.publish }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v${{ inputs.version }}"
+          title="Easy Auto Cycler ${{ inputs.version }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "$title" --notes-file release/CHANGELOG.md
+            gh release upload "$tag" release/artifacts/*.jar --clobber
+          else
+            gh release create "$tag" release/artifacts/*.jar \
+              --target "${{ github.sha }}" \
+              --title "$title" \
+              --notes-file release/CHANGELOG.md
+          fi
 
       - name: Upload dry-run output
         if: ${{ ! inputs.publish }}

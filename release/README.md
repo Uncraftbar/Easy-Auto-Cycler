@@ -1,6 +1,6 @@
 # Automated publishing
 
-The `Publish release` GitHub Actions workflow builds all supported branches and publishes their jars to Modrinth and CurseForge with the same version, title, changelog, loader, game-version, and dependency metadata.
+The `Publish release` GitHub Actions workflow builds all supported branches, publishes their jars to Modrinth and CurseForge, and creates a GitHub Release containing all ten jars with the same version and changelog.
 
 ## Required repository secrets
 
@@ -13,9 +13,9 @@ The `Publish release` GitHub Actions workflow builds all supported branches and 
 2. Open **Actions → Publish release → Run workflow**.
 3. Leave `publish` disabled for the first run. The workflow builds all ten jars and performs a Mod Publish Plugin dry run.
 4. Inspect the successful dry run and its artifacts.
-5. Run the workflow again with `publish` enabled to upload all ten releases.
+5. Run the workflow again with `publish` enabled to upload all ten releases and create the matching GitHub Release.
 
-The `destination` input normally stays set to `all`. Select `modrinth` or `curseforge` to safely retry only one platform after a partial platform outage or API failure.
+The `destination` input normally stays set to `all`. Select `modrinth` or `curseforge` to safely retry only one platform after a partial platform outage or API failure. Any real publish also creates or updates the GitHub Release, so retries safely restore missing release assets.
 
 The publisher defaults to dry-run mode even when invoked locally:
 

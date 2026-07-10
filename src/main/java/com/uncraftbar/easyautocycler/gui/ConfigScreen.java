@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ContainerObjectSelectionList;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,6 +21,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ConfigScreen extends Screen {
@@ -36,7 +38,6 @@ public class ConfigScreen extends Screen {
     private boolean originalMatchAny;
     private CycleButton<Boolean> matchModeCycleButton;
     private boolean matchAny = true;
-    private boolean saved = false;
 
     private static final int PADDING = 6;
     private static final int BUTTON_HEIGHT = 20;
@@ -111,8 +112,12 @@ public class ConfigScreen extends Screen {
                 .create(buttonsStartX + topButtonWidth + buttonSpacing, currentY,
                         contentWidth - topButtonWidth - buttonSpacing, BUTTON_HEIGHT,
                         Component.empty(),
-                        (cycleButton, newValue) -> matchAny = newValue);
+                        (cycleButton, newValue) -> {
+                            matchAny = newValue;
+                            updateMatchModeTooltip();
+                        });
         this.addRenderableWidget(this.matchModeCycleButton);
+        updateMatchModeTooltip();
 
         currentY += BUTTON_HEIGHT + 9;
         int saveButtonY = this.height - 30;
@@ -137,9 +142,12 @@ public class ConfigScreen extends Screen {
         super.render(graphics, mouseX, mouseY, a);
         int contentWidth = Math.min(380, this.width - 20);
         int guiLeft = (this.width - contentWidth) / 2;
-        graphics.drawString(this.font, this.title, guiLeft, 10, 0xFFF4F6F8, false);
-        graphics.drawString(this.font, Component.translatable("gui.easyautocycler.config.summary", filters.size()),
-                guiLeft, 23, 0xFFAAB2BF, false);
+        boolean dirty = hasUnsavedChanges();
+        Component renderedTitle = dirty ? this.title.copy().append(Component.literal(" *").withStyle(ChatFormatting.GOLD)) : this.title;
+        graphics.drawString(this.font, renderedTitle, guiLeft, 10, 0xFFF4F6F8, false);
+        Component summary = dirty ? Component.translatable("gui.easyautocycler.config.unsaved")
+                : Component.translatable("gui.easyautocycler.config.summary", filters.size());
+        graphics.drawString(this.font, summary, guiLeft, 23, dirty ? 0xFFFFC857 : 0xFFAAB2BF, false);
 
         if (filters.isEmpty()) {
             Component noFiltersMsg = Component.translatable("gui.easyautocycler.filters.no_filters")
@@ -155,7 +163,6 @@ public class ConfigScreen extends Screen {
         AutomationManager.INSTANCE.setMatchAny(matchModeCycleButton.getValue());
         AutomationManager.INSTANCE.setFilterEntries(filters);
 
-        this.saved = true;
         this.sendMessageToPlayer(Component.literal("Configuration saved!").withStyle(ChatFormatting.GREEN));
         this.onClose();
     }
@@ -178,14 +185,35 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void onClose() {
-        if (!this.saved) {
-            AutomationManager.INSTANCE.setMatchAny(this.originalMatchAny);
-            AutomationManager.INSTANCE.setFilterEntries(this.originalFilters.stream().map(FilterEntry::new).collect(Collectors.toList()));
-        }
-
         if (this.minecraft != null) {
             this.minecraft.setScreen(this.previousScreen);
         }
+    }
+
+    private void updateMatchModeTooltip() {
+        if (this.matchModeCycleButton != null) {
+            this.matchModeCycleButton.setTooltip(Tooltip.create(Component.translatable(matchAny
+                    ? "gui.easyautocycler.filters.match_any.tooltip"
+                    : "gui.easyautocycler.filters.match_all.tooltip")));
+        }
+    }
+
+    private boolean hasUnsavedChanges() {
+        if (matchAny != originalMatchAny || filters.size() != originalFilters.size()) return true;
+        for (int index = 0; index < filters.size(); index++) {
+            if (!sameFilter(filters.get(index), originalFilters.get(index))) return true;
+        }
+        return false;
+    }
+
+    private static boolean sameFilter(FilterEntry left, FilterEntry right) {
+        return left.isEnabled() == right.isEnabled()
+                && Objects.equals(left.getItemId(), right.getItemId())
+                && left.getMinCount() == right.getMinCount()
+                && Objects.equals(left.getEnchantmentId(), right.getEnchantmentId())
+                && left.getEnchantmentLevel() == right.getEnchantmentLevel()
+                && Objects.equals(left.getPaymentItemId(), right.getPaymentItemId())
+                && left.getMaxPrice() == right.getMaxPrice();
     }
 
     @Override

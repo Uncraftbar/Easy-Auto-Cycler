@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -38,6 +39,12 @@ public class FilterEditorScreen extends Screen {
     private EditBox maxPriceInput;
     private Component statusText = Component.empty();
     private boolean hasError = false;
+    private String initialEnchantmentId;
+    private String initialEnchantmentLevel;
+    private String initialItemId;
+    private String initialMinCount;
+    private String initialPaymentItem;
+    private String initialMaxPrice;
 
     private static final int PADDING = 12;
     private static final int INPUT_HEIGHT = 20;
@@ -114,6 +121,15 @@ public class FilterEditorScreen extends Screen {
                 Component.translatable("gui.easyautocycler.filter.max_price"));
         maxPriceInput.setValue(String.valueOf(filter.getMaxPrice()));
         this.addRenderableWidget(maxPriceInput);
+        paymentItemInput.setTooltip(Tooltip.create(
+                Component.translatable("gui.easyautocycler.filter.payment_item.tooltip")));
+
+        initialEnchantmentId = enchantmentIdInput.getValue();
+        initialEnchantmentLevel = enchantmentLevelInput.getValue();
+        initialItemId = itemIdInput.getValue();
+        initialMinCount = minCountInput.getValue();
+        initialPaymentItem = paymentItemInput.getValue();
+        initialMaxPrice = maxPriceInput.getValue();
 
         int bottomY = Math.min(this.height - BUTTON_HEIGHT - 8, top + EDITOR_HEIGHT - 28);
         int buttonWidth = (contentWidth - gap) / 2;
@@ -255,11 +271,14 @@ public class FilterEditorScreen extends Screen {
         int contentWidth = Math.min(EDITOR_WIDTH - PADDING * 2, this.width - PADDING * 2);
         int left = (this.width - contentWidth) / 2;
         int top = Math.max(0, (this.height - EDITOR_HEIGHT) / 2);
-        graphics.drawString(this.font, this.title, left, top + 9, 0xFFF4F6F8, false);
-        Component subtitle = statusText.getString().isEmpty()
-                ? Component.translatable("gui.easyautocycler.filter.subtitle") : statusText;
+        boolean dirty = hasUnsavedChanges();
+        Component renderedTitle = dirty ? this.title.copy().append(Component.literal(" *").withStyle(ChatFormatting.GOLD)) : this.title;
+        graphics.drawString(this.font, renderedTitle, left, top + 9, 0xFFF4F6F8, false);
+        Component subtitle = !statusText.getString().isEmpty() ? statusText
+                : dirty ? Component.translatable("gui.easyautocycler.config.unsaved")
+                : Component.translatable("gui.easyautocycler.filter.subtitle");
         graphics.drawString(this.font, subtitle, left, top + 22,
-                statusText.getString().isEmpty() ? 0xFFAAB2BF : 0xFFD9534F, false);
+                !statusText.getString().isEmpty() ? 0xFFD9534F : dirty ? 0xFFFFC857 : 0xFFAAB2BF, false);
 
         drawLabel(graphics, enchantmentIdInput, "gui.easyautocycler.filter.enchantment_id_short");
         drawLabel(graphics, enchantmentLevelInput, "gui.easyautocycler.filter.enchantment_level");
@@ -271,6 +290,16 @@ public class FilterEditorScreen extends Screen {
         enchantmentIdInput.renderSuggestionList(graphics, mouseX, mouseY);
         itemIdInput.renderSuggestionList(graphics, mouseX, mouseY);
         paymentItemInput.renderSuggestionList(graphics, mouseX, mouseY);
+    }
+
+    private boolean hasUnsavedChanges() {
+        return initialEnchantmentId != null && (
+                !initialEnchantmentId.equals(enchantmentIdInput.getValue())
+                        || !initialEnchantmentLevel.equals(enchantmentLevelInput.getValue())
+                        || !initialItemId.equals(itemIdInput.getValue())
+                        || !initialMinCount.equals(minCountInput.getValue())
+                        || !initialPaymentItem.equals(paymentItemInput.getValue())
+                        || !initialMaxPrice.equals(maxPriceInput.getValue()));
     }
 
     private void drawLabel(GuiGraphics graphics, EditBox input, String key) {

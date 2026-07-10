@@ -38,10 +38,13 @@ public class FilterEditorScreen extends Screen {
     private Component statusText = Component.empty();
     private boolean hasError = false;
 
-    private static final int PADDING = 10;
+    private static final int PADDING = 12;
     private static final int INPUT_HEIGHT = 20;
     private static final int BUTTON_HEIGHT = 20;
-    private static final int INPUT_WIDTH = 220;
+    private static final int EDITOR_WIDTH = 390;
+    private static final int EDITOR_HEIGHT = 220;
+    private static final int HEADER_HEIGHT = 40;
+    private static final int FIELD_STEP = 39;
 
     public FilterEditorScreen(@Nullable Screen previousScreen, FilterEntry filter,
                               List<String> enchantmentSuggestions, List<String> itemSuggestions,
@@ -58,11 +61,16 @@ public class FilterEditorScreen extends Screen {
     protected void init() {
         super.init();
 
-        int left = (this.width - INPUT_WIDTH) / 2;
-        int yPos = PADDING * 3;
+        int contentWidth = Math.min(EDITOR_WIDTH - PADDING * 2, this.width - PADDING * 2);
+        int left = (this.width - contentWidth) / 2;
+        int top = Math.max(0, (this.height - EDITOR_HEIGHT) / 2);
+        int gap = 12;
+        int columnWidth = (contentWidth - gap) / 2;
+        int fieldStep = this.height < 210 ? 34 : FIELD_STEP;
+        int firstY = top + HEADER_HEIGHT + (this.height < 210 ? 8 : 13);
 
         enchantmentIdInput = new SuggestingEditBox(
-                this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                this.font, left, firstY, columnWidth, INPUT_HEIGHT,
                 Component.translatable("gui.easyautocycler.filter.enchantment_id"),
                 enchantmentSuggestions);
         enchantmentIdInput.setMaxLength(256);
@@ -71,15 +79,13 @@ public class FilterEditorScreen extends Screen {
         }
         this.addRenderableWidget(enchantmentIdInput);
 
-        yPos += INPUT_HEIGHT + PADDING;
-        enchantmentLevelInput = new EditBox(this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+        enchantmentLevelInput = new EditBox(this.font, left + columnWidth + gap, firstY, columnWidth, INPUT_HEIGHT,
                 Component.translatable("gui.easyautocycler.filter.enchantment_level"));
         enchantmentLevelInput.setValue(String.valueOf(filter.getEnchantmentLevel()));
         this.addRenderableWidget(enchantmentLevelInput);
 
-        yPos += INPUT_HEIGHT + PADDING;
         itemIdInput = new SuggestingEditBox(
-                this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                this.font, left, firstY + fieldStep, columnWidth, INPUT_HEIGHT,
                 Component.translatable("gui.easyautocycler.filter.item_id"),
                 itemSuggestions);
         itemIdInput.setMaxLength(256);
@@ -88,15 +94,13 @@ public class FilterEditorScreen extends Screen {
         }
         this.addRenderableWidget(itemIdInput);
 
-        yPos += INPUT_HEIGHT + PADDING;
-        minCountInput = new EditBox(this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+        minCountInput = new EditBox(this.font, left + columnWidth + gap, firstY + fieldStep, columnWidth, INPUT_HEIGHT,
                 Component.translatable("gui.easyautocycler.filter.min_count"));
         minCountInput.setValue(String.valueOf(filter.getMinCount()));
         this.addRenderableWidget(minCountInput);
 
-        yPos += INPUT_HEIGHT + PADDING;
         paymentItemInput = new SuggestingEditBox(
-                this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+                this.font, left, firstY + fieldStep * 2, columnWidth, INPUT_HEIGHT,
                 Component.translatable("gui.easyautocycler.filter.payment_item"),
                 itemSuggestions);
         paymentItemInput.setMaxLength(256);
@@ -105,14 +109,13 @@ public class FilterEditorScreen extends Screen {
         }
         this.addRenderableWidget(paymentItemInput);
 
-        yPos += INPUT_HEIGHT + PADDING;
-        maxPriceInput = new EditBox(this.font, left, yPos, INPUT_WIDTH, INPUT_HEIGHT,
+        maxPriceInput = new EditBox(this.font, left + columnWidth + gap, firstY + fieldStep * 2, columnWidth, INPUT_HEIGHT,
                 Component.translatable("gui.easyautocycler.filter.max_price"));
         maxPriceInput.setValue(String.valueOf(filter.getMaxPrice()));
         this.addRenderableWidget(maxPriceInput);
 
-        int bottomY = this.height - PADDING - BUTTON_HEIGHT;
-        int buttonWidth = 100;
+        int bottomY = Math.min(this.height - BUTTON_HEIGHT - 8, top + EDITOR_HEIGHT - 28);
+        int buttonWidth = (contentWidth - gap) / 2;
 
         this.addRenderableWidget(Button.builder(
                         Component.translatable("gui.easyautocycler.filter.save"),
@@ -122,7 +125,7 @@ public class FilterEditorScreen extends Screen {
         this.addRenderableWidget(Button.builder(
                         Component.translatable("gui.easyautocycler.filter.cancel"),
                         button -> onClose())
-                .pos(left + INPUT_WIDTH - buttonWidth, bottomY).size(buttonWidth, BUTTON_HEIGHT).build());
+                .pos(left + buttonWidth + gap, bottomY).size(buttonWidth, BUTTON_HEIGHT).build());
     }
 
     private void saveFilter() {
@@ -248,35 +251,30 @@ public class FilterEditorScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         super.extractRenderState(graphics, mouseX, mouseY, a);
 
-        int titleX = this.width / 2 - this.font.width(this.title) / 2;
-        graphics.text(this.font, this.title, titleX, PADDING, -1, true);
+        int contentWidth = Math.min(EDITOR_WIDTH - PADDING * 2, this.width - PADDING * 2);
+        int left = (this.width - contentWidth) / 2;
+        int top = Math.max(0, (this.height - EDITOR_HEIGHT) / 2);
+        graphics.text(this.font, this.title, left, top + 9, 0xFFF4F6F8, false);
+        Component subtitle = statusText.getString().isEmpty()
+                ? Component.translatable("gui.easyautocycler.filter.subtitle") : statusText;
+        graphics.text(this.font, subtitle, left, top + 22,
+                statusText.getString().isEmpty() ? 0xFFAAB2BF : 0xFFD9534F, false);
 
-        int left = (this.width - INPUT_WIDTH) / 2;
-        int offset = PADDING * 2;
+        drawLabel(graphics, enchantmentIdInput, "gui.easyautocycler.filter.enchantment_id_short");
+        drawLabel(graphics, enchantmentLevelInput, "gui.easyautocycler.filter.enchantment_level");
+        drawLabel(graphics, itemIdInput, "gui.easyautocycler.filter.item_id_short");
+        drawLabel(graphics, minCountInput, "gui.easyautocycler.filter.min_count");
+        drawLabel(graphics, paymentItemInput, "gui.easyautocycler.filter.payment_item_short");
+        drawLabel(graphics, maxPriceInput, "gui.easyautocycler.filter.max_price");
 
-        String[] labels = {
-                "gui.easyautocycler.filter.enchantment_id",
-                "gui.easyautocycler.filter.enchantment_level",
-                "gui.easyautocycler.filter.item_id",
-                "gui.easyautocycler.filter.min_count",
-                "gui.easyautocycler.filter.payment_item",
-                "gui.easyautocycler.filter.max_price"
-        };
-        for (String key : labels) {
-            graphics.text(this.font, Component.translatable(key), left, offset, -1, true);
-            offset += INPUT_HEIGHT + PADDING;
-        }
+        enchantmentIdInput.extractSuggestionList(graphics, mouseX, mouseY);
+        itemIdInput.extractSuggestionList(graphics, mouseX, mouseY);
+        paymentItemInput.extractSuggestionList(graphics, mouseX, mouseY);
+    }
 
-        int statusY = this.height - PADDING * 2 - BUTTON_HEIGHT - 15;
-        if (!statusText.getString().isEmpty()) {
-            int statusX = this.width / 2 - this.font.width(statusText) / 2;
-            graphics.text(this.font, statusText, statusX, statusY, hasError ? 0xFFFF5555 : 0xFF55FF55, true);
-        } else {
-            Component helpText = Component.translatable("gui.easyautocycler.filter.help")
-                    .withStyle(ChatFormatting.GRAY);
-            int helpX = this.width / 2 - this.font.width(helpText) / 2;
-            graphics.text(this.font, helpText, helpX, statusY, 0xFFAAAAAA, true);
-        }
+    private void drawLabel(GuiGraphicsExtractor graphics, EditBox input, String key) {
+        graphics.text(this.font, Component.translatable(key), input.getX(), input.getY() - 11,
+                0xFFAAB2BF, false);
     }
 
     @Override

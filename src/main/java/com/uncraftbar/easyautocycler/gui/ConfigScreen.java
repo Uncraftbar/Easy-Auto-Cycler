@@ -7,12 +7,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /** Dashboard for managing trade filters. */
 public class ConfigScreen extends Screen {
@@ -26,7 +28,6 @@ public class ConfigScreen extends Screen {
     private final List<FilterEntry> originalFilters = new ArrayList<>();
     private final boolean originalMatchAny;
     private boolean matchAny;
-    private boolean saved;
 
     private GuiLayout.Bounds panel;
     private ScrollableContainer filtersContainer;
@@ -62,8 +63,12 @@ public class ConfigScreen extends Screen {
             .displayOnlyValue()
             .create(left + addWidth + GuiTheme.GAP, toolbarY + 4,
                 contentWidth - addWidth - GuiTheme.GAP, GuiTheme.CONTROL_HEIGHT, Component.empty(),
-                (button, value) -> matchAny = value);
+                (button, value) -> {
+                    matchAny = value;
+                    updateMatchModeTooltip();
+                });
         addRenderableWidget(matchModeButton);
+        updateMatchModeTooltip();
 
         int listY = toolbarY + TOOLBAR_HEIGHT + 3;
         int footerTop = panel.bottom() - FOOTER_HEIGHT;
@@ -91,9 +96,16 @@ public class ConfigScreen extends Screen {
         super.render(graphics, mouseX, mouseY, partialTick);
 
         // Text belongs to the foreground stratum, just like vanilla screen titles.
-        graphics.drawString(font, title, panel.innerLeft(), panel.y() + 9, GuiTheme.TEXT, false);
-        Component summary = Component.translatable("gui.easyautocycler.config.summary", filters.size());
-        graphics.drawString(font, summary, panel.innerLeft(), panel.y() + 22, GuiTheme.MUTED, false);
+        Component renderedTitle = hasUnsavedChanges()
+            ? title.copy().append(Component.literal(" *").withStyle(ChatFormatting.GOLD))
+            : title;
+        graphics.drawString(font, renderedTitle, panel.innerLeft(), panel.y() + 9, GuiTheme.TEXT, false);
+        boolean dirty = hasUnsavedChanges();
+        Component summary = dirty
+            ? Component.translatable("gui.easyautocycler.config.unsaved")
+            : Component.translatable("gui.easyautocycler.config.summary", filters.size());
+        graphics.drawString(font, summary, panel.innerLeft(), panel.y() + 22,
+            dirty ? GuiTheme.WARNING : GuiTheme.MUTED, false);
 
         if (filters.isEmpty()) {
             int centerX = filtersContainer.getX() + filtersContainer.getWidth() / 2;
@@ -110,7 +122,6 @@ public class ConfigScreen extends Screen {
     private void onSave(Button ignored) {
         AutomationManager.INSTANCE.setMatchAny(matchAny);
         AutomationManager.INSTANCE.setFilterEntries(copyFilters(filters));
-        saved = true;
         sendMessageToPlayer(Component.translatable("gui.easyautocycler.config.saved").withStyle(ChatFormatting.GREEN));
         onClose();
     }
@@ -181,12 +192,34 @@ public class ConfigScreen extends Screen {
         return source.stream().map(FilterEntry::new).toList();
     }
 
+    private void updateMatchModeTooltip() {
+        if (matchModeButton != null) {
+            matchModeButton.setTooltip(Tooltip.create(Component.translatable(matchAny
+                ? "gui.easyautocycler.filters.match_any.tooltip"
+                : "gui.easyautocycler.filters.match_all.tooltip")));
+        }
+    }
+
+    private boolean hasUnsavedChanges() {
+        if (matchAny != originalMatchAny || filters.size() != originalFilters.size()) return true;
+        for (int index = 0; index < filters.size(); index++) {
+            if (!sameFilter(filters.get(index), originalFilters.get(index))) return true;
+        }
+        return false;
+    }
+
+    private static boolean sameFilter(FilterEntry left, FilterEntry right) {
+        return left.isEnabled() == right.isEnabled()
+            && Objects.equals(left.getItemId(), right.getItemId())
+            && left.getMinCount() == right.getMinCount()
+            && Objects.equals(left.getEnchantmentId(), right.getEnchantmentId())
+            && left.getEnchantmentLevel() == right.getEnchantmentLevel()
+            && Objects.equals(left.getPaymentItemId(), right.getPaymentItemId())
+            && left.getMaxPrice() == right.getMaxPrice();
+    }
+
     @Override
     public void onClose() {
-        if (!saved) {
-            AutomationManager.INSTANCE.setMatchAny(originalMatchAny);
-            AutomationManager.INSTANCE.setFilterEntries(copyFilters(originalFilters));
-        }
         if (minecraft != null) minecraft.setScreen(previousScreen);
     }
 

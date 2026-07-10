@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -36,6 +37,12 @@ public class FilterEditorScreen extends Screen {
     private SuggestingEditBox paymentItemInput;
     private EditBox maxPriceInput;
     private Component statusText = Component.empty();
+    private String initialEnchantmentId;
+    private String initialEnchantmentLevel;
+    private String initialItemId;
+    private String initialMinCount;
+    private String initialPaymentItem;
+    private String initialMaxPrice;
 
     private List<String> enchantmentSuggestions = List.of();
     private List<String> itemSuggestions = List.of();
@@ -75,6 +82,15 @@ public class FilterEditorScreen extends Screen {
             idString(filter.getPaymentItemId()));
         maxPriceInput = edit(right, firstY + fieldStep * 2, columnWidth,
             Component.translatable("gui.easyautocycler.filter.max_price"), String.valueOf(filter.getMaxPrice()));
+        paymentItemInput.setTooltip(Tooltip.create(
+            Component.translatable("gui.easyautocycler.filter.payment_item.tooltip")));
+
+        initialEnchantmentId = enchantmentIdInput.getValue();
+        initialEnchantmentLevel = enchantmentLevelInput.getValue();
+        initialItemId = itemIdInput.getValue();
+        initialMinCount = minCountInput.getValue();
+        initialPaymentItem = paymentItemInput.getValue();
+        initialMaxPrice = maxPriceInput.getValue();
 
         int footerY = panel.bottom() - FOOTER_HEIGHT + 8;
         int buttonWidth = (panel.innerWidth() - gap) / 2;
@@ -200,11 +216,17 @@ public class FilterEditorScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partialTick);
 
-        graphics.drawString(font, title, panel.innerLeft(), panel.y() + 9, GuiTheme.TEXT, false);
-        Component subtitle = statusText.getString().isEmpty()
-            ? Component.translatable("gui.easyautocycler.filter.subtitle") : statusText;
+        boolean dirty = hasUnsavedChanges();
+        Component renderedTitle = dirty
+            ? title.copy().append(Component.literal(" *").withStyle(ChatFormatting.GOLD))
+            : title;
+        graphics.drawString(font, renderedTitle, panel.innerLeft(), panel.y() + 9, GuiTheme.TEXT, false);
+        Component subtitle = !statusText.getString().isEmpty()
+            ? statusText
+            : dirty ? Component.translatable("gui.easyautocycler.config.unsaved")
+            : Component.translatable("gui.easyautocycler.filter.subtitle");
         graphics.drawString(font, subtitle, panel.innerLeft(), panel.y() + 22,
-            statusText.getString().isEmpty() ? GuiTheme.MUTED : GuiTheme.DANGER, false);
+            !statusText.getString().isEmpty() ? GuiTheme.DANGER : dirty ? GuiTheme.WARNING : GuiTheme.MUTED, false);
 
         drawLabel(graphics, enchantmentIdInput, "gui.easyautocycler.filter.enchantment_id_short");
         drawLabel(graphics, enchantmentLevelInput, "gui.easyautocycler.filter.enchantment_level");
@@ -226,6 +248,16 @@ public class FilterEditorScreen extends Screen {
 
     private static String idString(@Nullable ResourceLocation id) {
         return id == null ? "" : id.toString();
+    }
+
+    private boolean hasUnsavedChanges() {
+        return initialEnchantmentId != null && (
+            !initialEnchantmentId.equals(enchantmentIdInput.getValue())
+                || !initialEnchantmentLevel.equals(enchantmentLevelInput.getValue())
+                || !initialItemId.equals(itemIdInput.getValue())
+                || !initialMinCount.equals(minCountInput.getValue())
+                || !initialPaymentItem.equals(paymentItemInput.getValue())
+                || !initialMaxPrice.equals(maxPriceInput.getValue()));
     }
 
     @Override

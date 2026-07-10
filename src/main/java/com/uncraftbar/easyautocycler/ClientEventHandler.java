@@ -1,6 +1,7 @@
 package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
+import com.uncraftbar.easyautocycler.config.ClientConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -28,10 +29,19 @@ public class ClientEventHandler {
         if (screen instanceof MerchantScreen merchantScreen) {
             EasyAutoCyclerMod.LOGGER.debug("MerchantScreen opened. Adding custom image buttons (Static Toggle Icon)...");
 
+            ClientConfig.Config clientConfig = ClientConfig.load();
+            ClientConfig.ButtonLocation buttonLocation = clientConfig.parsedButtonLocation();
+            if (buttonLocation == ClientConfig.ButtonLocation.NONE) {
+                return;
+            }
+
             int leftPos = (merchantScreen.width - 276) / 2;
             int topPos = (merchantScreen.height - 166) / 2;
             int buttonWidth = 18; int buttonHeight = 18; int buttonPadding = 2;
-            int cycleButtonPosX = leftPos + 107; int cycleButtonPosY = topPos + 8; int cycleButtonHeight = 14;
+            int anchorX = buttonLocation == ClientConfig.ButtonLocation.TOP_RIGHT ? 250 : 107;
+            int cycleButtonPosX = leftPos + anchorX + clientConfig.buttonOffsetX;
+            int cycleButtonPosY = topPos + 8 + clientConfig.buttonOffsetY;
+            int cycleButtonHeight = 14;
             int configButtonX = cycleButtonPosX; int configButtonY = cycleButtonPosY + cycleButtonHeight + buttonPadding;
             int toggleButtonX = cycleButtonPosX; int toggleButtonY = configButtonY + buttonHeight + buttonPadding;
 

@@ -18,6 +18,7 @@ public final class GuiTheme {
     public static final int ACCENT = 0xFF50C878;
     public static final int ACCENT_DIM = 0xFF28643C;
     public static final int DANGER = 0xFFD9534F;
+    public static final int WARNING = 0xFFFFC857;
     public static final int TEXT = 0xFFF4F6F8;
     public static final int MUTED = 0xFFAAB2BF;
     public static final int FAINT = 0xFF747D8C;

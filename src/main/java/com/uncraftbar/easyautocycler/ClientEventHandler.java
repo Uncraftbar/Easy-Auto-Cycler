@@ -2,6 +2,7 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
+import com.uncraftbar.easyautocycler.config.ClientConfig;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
@@ -36,7 +37,10 @@ public class ClientEventHandler {
     public static void onScreenInit(Minecraft client, Screen screen, int scaledWidth, int scaledHeight) {
         if (screen instanceof MerchantScreen merchantScreen) {
             EasyAutoCyclerMod.LOGGER.debug("MerchantScreen opened. Adding custom image buttons...");
-            int leftPos = (merchantScreen.width - 276) / 2; int topPos = (merchantScreen.height - 166) / 2; int buttonWidth = 18; int buttonHeight = 18; int buttonPadding = 2; int cycleButtonPosX = leftPos + 107; int cycleButtonPosY = topPos + 8; int cycleButtonHeight = 14; int configButtonX = cycleButtonPosX; int configButtonY = cycleButtonPosY + cycleButtonHeight + buttonPadding; int toggleButtonX = cycleButtonPosX; int toggleButtonY = configButtonY + buttonHeight + buttonPadding;
+            ClientConfig.Config clientConfig = ClientConfig.load();
+            ClientConfig.ButtonLocation buttonLocation = clientConfig.parsedButtonLocation();
+            if (buttonLocation == ClientConfig.ButtonLocation.NONE) return;
+            int leftPos = (merchantScreen.width - 276) / 2; int topPos = (merchantScreen.height - 166) / 2; int buttonWidth = 18; int buttonHeight = 18; int buttonPadding = 2; int anchorX = buttonLocation == ClientConfig.ButtonLocation.TOP_RIGHT ? 250 : 107; int cycleButtonPosX = leftPos + anchorX + clientConfig.buttonOffsetX; int cycleButtonPosY = topPos + 8 + clientConfig.buttonOffsetY; int cycleButtonHeight = 14; int configButtonX = cycleButtonPosX; int configButtonY = cycleButtonPosY + cycleButtonHeight + buttonPadding; int toggleButtonX = cycleButtonPosX; int toggleButtonY = configButtonY + buttonHeight + buttonPadding;
 
             CustomImageButton configButton = new CycleAwareImageButton(
                     merchantScreen, configButtonX, configButtonY, buttonWidth, buttonHeight, CONFIG_BUTTON_NORMAL_RL, CONFIG_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.config.tooltip"),

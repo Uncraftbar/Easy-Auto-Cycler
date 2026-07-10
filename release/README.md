@@ -20,11 +20,11 @@ The `destination` input normally stays set to `all`. Select `modrinth` or `curse
 The publisher defaults to dry-run mode even when invoked locally:
 
 ```text
-./release/gradlew -p release publishMods -PreleaseVersion=3.0.0
+./release/gradlew -p release publishMods -PreleaseVersion=3.1.0
 ```
 
 Actual local publication requires both token environment variables and an explicit opt-out from dry-run mode:
 
 ```text
-./release/gradlew -p release publishMods -PreleaseVersion=3.0.0 -PdryRun=false
+./release/gradlew -p release publishMods -PreleaseVersion=3.1.0 -PdryRun=false
 ```

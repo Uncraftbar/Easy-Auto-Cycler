@@ -3,7 +3,7 @@ plugins {
     id "me.modmuss50.mod-publish-plugin" version "2.1.1"
 }
 
-def releaseVersion = providers.gradleProperty("releaseVersion").orElse("3.0.0")
+def releaseVersion = providers.gradleProperty("releaseVersion").orElse("3.1.0")
 def dryRunEnabled = providers.gradleProperty("dryRun").map { it.toBoolean() }.orElse(true)
 def changelogText = providers.fileContents(layout.projectDirectory.file("CHANGELOG.md")).asText
 def artifactsDirectory = layout.projectDirectory.dir("artifacts")

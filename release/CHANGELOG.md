@@ -1,9 +1,9 @@
-# v3.0.0 - Faster, Seamless Trade Cycling
+# v3.1.0 - Redesigned Filter Configuration
 
 ## Changes
 
-- Cycling now automatically runs as fast as the server and connection permit.
-- Removed the cycling speed setting; no manual delay tuning is needed anymore.
-- Keeps one cycle request in flight and checks every returned set of trades before continuing.
-- Cycling and configuration buttons now stay hidden whenever trade cycling is unavailable.
-- Restored the scrollable filter list on Minecraft 1.21.11.
+- Redesigned the filter configuration screens with a cleaner, responsive layout.
+- Added namespace-free item and enchantment ID autocomplete across all mod namespaces.
+- Added a mouse- and keyboard-selectable autocomplete list.
+- Reorganized filter fields and improved filter summaries.
+- Ported the new interface across every supported Minecraft version and mod loader.

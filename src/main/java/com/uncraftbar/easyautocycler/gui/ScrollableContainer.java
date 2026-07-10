@@ -59,9 +59,6 @@ public class ScrollableContainer extends AbstractWidget {
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (this.visible) {
-            // Draw background
-            guiGraphics.fill(getX(), getY(), getX() + width, getY() + height, 0x80000000);
-            
             // Set up scissor to clip widgets that are outside the visible area
             guiGraphics.enableScissor(
                 getX(), 
@@ -93,7 +90,7 @@ public class ScrollableContainer extends AbstractWidget {
                 int scrollBarY = getY() + (int)((height - scrollBarHeight) * ((float)scrollOffset / (contentHeight - height)));
                 
                 // Draw scrollbar background
-                guiGraphics.fill(getX() + width - scrollBarWidth, getY(), getX() + width, getY() + height, 0x40000000);
+                guiGraphics.fill(getX() + width - scrollBarWidth, getY(), getX() + width, getY() + height, 0x66000000);
                 
                 // Draw scrollbar handle
                 guiGraphics.fill(
@@ -101,7 +98,7 @@ public class ScrollableContainer extends AbstractWidget {
                     scrollBarY,
                     getX() + width,
                     scrollBarY + scrollBarHeight,
-                    isDraggingScrollbar ? 0xFFAAAAAA : 0xFFCCCCCC
+                    isDraggingScrollbar ? GuiTheme.ACCENT : GuiTheme.MUTED
                 );
             }
         }
@@ -216,4 +213,5 @@ public class ScrollableContainer extends AbstractWidget {
     public int getHeight() {
         return this.height;
     }
+
 }

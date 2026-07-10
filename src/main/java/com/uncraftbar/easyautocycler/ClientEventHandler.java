@@ -3,6 +3,7 @@ package com.uncraftbar.easyautocycler;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
+import com.uncraftbar.easyautocycler.config.ClientConfig;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
@@ -44,13 +45,17 @@ public class ClientEventHandler {
             return;
         }
 
+        ClientConfig.Config clientConfig = ClientConfig.load();
+        ClientConfig.ButtonLocation buttonLocation = clientConfig.parsedButtonLocation();
+        if (buttonLocation == ClientConfig.ButtonLocation.NONE) return;
         int leftPos = (merchantScreen.width - 276) / 2;
         int topPos = (merchantScreen.height - 166) / 2;
         int buttonWidth = 18;
         int buttonHeight = 18;
         int buttonPadding = 2;
-        int cycleButtonPosX = leftPos + 107;
-        int cycleButtonPosY = topPos + 8;
+        int anchorX = buttonLocation == ClientConfig.ButtonLocation.TOP_RIGHT ? 250 : 107;
+        int cycleButtonPosX = leftPos + anchorX + clientConfig.buttonOffsetX;
+        int cycleButtonPosY = topPos + 8 + clientConfig.buttonOffsetY;
         int cycleButtonHeight = 14;
         int configButtonX = cycleButtonPosX;
         int configButtonY = cycleButtonPosY + cycleButtonHeight + buttonPadding;

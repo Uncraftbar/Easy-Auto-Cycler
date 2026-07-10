@@ -2,6 +2,7 @@ package com.uncraftbar.easyautocycler;
 
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
+import com.uncraftbar.easyautocycler.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.InputWithModifiers;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -25,13 +26,17 @@ public class ClientEventHandler {
         Screen screen = event.getScreen();
 
         if (screen instanceof MerchantScreen merchantScreen) {
-            int leftPos = (merchantScreen.width - 276) / 2;
+        ClientConfig.Config clientConfig = ClientConfig.load();
+        ClientConfig.ButtonLocation buttonLocation = clientConfig.parsedButtonLocation();
+        if (buttonLocation == ClientConfig.ButtonLocation.NONE) return;
+        int leftPos = (merchantScreen.width - 276) / 2;
             int topPos = (merchantScreen.height - 166) / 2;
             int buttonWidth = 18;
             int buttonHeight = 18;
             int buttonPadding = 2;
-            int cycleButtonPosX = leftPos + 107;
-            int cycleButtonPosY = topPos + 8;
+        int anchorX = buttonLocation == ClientConfig.ButtonLocation.TOP_RIGHT ? 250 : 107;
+        int cycleButtonPosX = leftPos + anchorX + clientConfig.buttonOffsetX;
+        int cycleButtonPosY = topPos + 8 + clientConfig.buttonOffsetY;
             int cycleButtonHeight = 14;
             int configButtonX = cycleButtonPosX;
             int configButtonY = cycleButtonPosY + cycleButtonHeight + buttonPadding;

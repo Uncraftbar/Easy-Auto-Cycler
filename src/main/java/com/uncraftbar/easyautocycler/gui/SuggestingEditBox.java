@@ -146,6 +146,17 @@ public class SuggestingEditBox extends EditBox {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (clickSuggestion(event)) {
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
+    }
+
+    /**
+     * Handles clicks in the popup, which lies outside the edit box's normal hit
+     * rectangle and therefore is not reached by newer Screen event routing.
+     */
+    public boolean clickSuggestion(MouseButtonEvent event) {
         if (event.button() == 0 && isFocused() && dropdownHeight > 0
                 && event.x() >= dropdownX && event.x() < dropdownX + dropdownWidth
                 && event.y() >= dropdownY && event.y() < dropdownY + dropdownHeight) {
@@ -153,6 +164,6 @@ public class SuggestingEditBox extends EditBox {
             acceptSuggestion(Math.max(0, Math.min(matches.size() - 1, index)));
             return true;
         }
-        return super.mouseClicked(event, doubleClick);
+        return false;
     }
 }

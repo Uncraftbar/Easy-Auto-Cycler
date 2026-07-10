@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -275,6 +276,16 @@ public class FilterEditorScreen extends Screen {
     private void drawLabel(GuiGraphicsExtractor graphics, EditBox input, String key) {
         graphics.text(this.font, Component.translatable(key), input.getX(), input.getY() - 11,
                 0xFFAAB2BF, false);
+    }
+
+    @Override
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        if (enchantmentIdInput != null && enchantmentIdInput.clickSuggestion(event)
+                || itemIdInput != null && itemIdInput.clickSuggestion(event)
+                || paymentItemInput != null && paymentItemInput.clickSuggestion(event)) {
+            return true;
+        }
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override

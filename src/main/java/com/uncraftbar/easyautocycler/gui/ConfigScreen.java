@@ -40,7 +40,7 @@ public class ConfigScreen extends Screen {
 
     private static final int PADDING = 6;
     private static final int BUTTON_HEIGHT = 20;
-    private static final int FILTER_ROW_HEIGHT = 22;
+    private static final int FILTER_ROW_HEIGHT = 38;
 
     public ConfigScreen(@Nullable Screen previousScreen, Component title) {
         super(title);
@@ -87,17 +87,16 @@ public class ConfigScreen extends Screen {
             this.itemSuggestions = List.of();
         }
 
-        int contentWidth = 300;
+        int contentWidth = Math.min(380, this.width - 20);
         int guiLeft = (this.width - contentWidth) / 2;
-        int currentY = PADDING * 4 + 10;
+        int currentY = 48;
 
-        int topButtonWidth = 120;
-        int buttonSpacing = 10;
-        int totalButtonsWidth = (topButtonWidth * 2) + buttonSpacing;
-        int buttonsStartX = guiLeft + (contentWidth - totalButtonsWidth) / 2;
+        int topButtonWidth = Math.min(116, (contentWidth - PADDING) / 2);
+        int buttonSpacing = PADDING;
+        int buttonsStartX = guiLeft;
 
         this.addRenderableWidget(Button.builder(
-                Component.translatable("gui.easyautocycler.filters.add"),
+                Component.translatable("gui.easyautocycler.filters.add_compact"),
                 button -> openFilterEditor(null))
                 .pos(buttonsStartX, currentY)
                 .size(topButtonWidth, BUTTON_HEIGHT)
@@ -105,47 +104,48 @@ public class ConfigScreen extends Screen {
 
         this.matchModeCycleButton = CycleButton.<Boolean>builder(value ->
                         Component.translatable(value
-                                ? "gui.easyautocycler.filters.match_any"
-                                : "gui.easyautocycler.filters.match_all"), matchAny)
+                                ? "gui.easyautocycler.filters.match_any_compact"
+                                : "gui.easyautocycler.filters.match_all_compact"), matchAny)
                 .withValues(true, false)
                 .displayOnlyValue()
-                .create(buttonsStartX + topButtonWidth + buttonSpacing, currentY, topButtonWidth, BUTTON_HEIGHT,
+                .create(buttonsStartX + topButtonWidth + buttonSpacing, currentY,
+                        contentWidth - topButtonWidth - buttonSpacing, BUTTON_HEIGHT,
                         Component.empty(),
                         (cycleButton, newValue) -> matchAny = newValue);
         this.addRenderableWidget(this.matchModeCycleButton);
 
-        currentY += BUTTON_HEIGHT + PADDING + 5;
-
-        int bottomMargin = PADDING + 5;
-        int cancelButtonY = this.height - bottomMargin - BUTTON_HEIGHT;
-        int saveButtonY = cancelButtonY - BUTTON_HEIGHT - PADDING;
-
-        int filtersListHeight = saveButtonY - currentY - PADDING;
+        currentY += BUTTON_HEIGHT + 9;
+        int saveButtonY = this.height - 30;
+        int filtersListHeight = saveButtonY - currentY - 5;
         this.filterListWidget = new FilterListWidget(this.minecraft, guiLeft, currentY, contentWidth, filtersListHeight);
         refreshFiltersList();
         this.addRenderableWidget(this.filterListWidget);
 
-        int bottomButtonWidth = (contentWidth - PADDING) / 2;
+        int bottomButtonWidth = (contentWidth - PADDING * 2) / 3;
         this.addRenderableWidget(Button.builder(Component.translatable("gui.easyautocycler.config.save"), this::onSave)
                 .pos(guiLeft, saveButtonY).size(bottomButtonWidth, BUTTON_HEIGHT).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.easyautocycler.config.clear"), this::onClear)
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.easyautocycler.config.clear_all"), this::onClear)
                 .pos(guiLeft + bottomButtonWidth + PADDING, saveButtonY).size(bottomButtonWidth, BUTTON_HEIGHT).build());
 
         this.addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), button -> this.onClose())
-                .pos(guiLeft, cancelButtonY).size(contentWidth, BUTTON_HEIGHT).build());
+                .pos(guiLeft + (bottomButtonWidth + PADDING) * 2, saveButtonY)
+                .size(contentWidth - (bottomButtonWidth + PADDING) * 2, BUTTON_HEIGHT).build());
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         super.extractRenderState(graphics, mouseX, mouseY, a);
-        int titleX = this.width / 2 - this.font.width(this.title) / 2;
-        graphics.text(this.font, this.title, titleX, PADDING * 2, -1, true);
+        int contentWidth = Math.min(380, this.width - 20);
+        int guiLeft = (this.width - contentWidth) / 2;
+        graphics.text(this.font, this.title, guiLeft, 10, 0xFFF4F6F8, false);
+        graphics.text(this.font, Component.translatable("gui.easyautocycler.config.summary", filters.size()),
+                guiLeft, 23, 0xFFAAB2BF, false);
 
         if (filters.isEmpty()) {
             Component noFiltersMsg = Component.translatable("gui.easyautocycler.filters.no_filters")
                     .withStyle(ChatFormatting.GRAY);
             int msgX = this.width / 2 - this.font.width(noFiltersMsg) / 2;
-            int msgY = PADDING * 4 + 10 + BUTTON_HEIGHT + PADDING + 30;
+            int msgY = this.height / 2;
             graphics.text(this.font, noFiltersMsg, msgX, msgY, 0xFFAAAAAA, true);
         }
     }
@@ -161,6 +161,7 @@ public class ConfigScreen extends Screen {
 
     private void onClear(Button button) {
         filters.clear();
+        matchAny = true;
         refreshFiltersList();
 
         if (this.matchModeCycleButton != null) this.matchModeCycleButton.setValue(true);
@@ -253,15 +254,15 @@ public class ConfigScreen extends Screen {
 
             FilterEntryRow(FilterEntry filter, java.util.function.Consumer<FilterEntry> editAction, java.util.function.Consumer<FilterEntry> deleteAction) {
                 this.toggleButton = CycleButton.<Boolean>builder(value ->
-                                Component.literal(value ? "\u2713" : "\u2717")
-                                        .withStyle(value ? ChatFormatting.GREEN : ChatFormatting.RED),
+                                Component.literal(value ? "ON" : "OFF")
+                                        .withStyle(value ? ChatFormatting.GREEN : ChatFormatting.GRAY),
                                 filter.isEnabled())
                         .withValues(true, false)
                         .displayOnlyValue()
-                        .create(0, 0, 20, 20, Component.empty(), (cycleButton, newValue) -> filter.setEnabled(newValue));
+                        .create(0, 0, 38, 20, Component.empty(), (cycleButton, newValue) -> filter.setEnabled(newValue));
                 this.filterButton = Button.builder(filter.getDisplayName(), button -> editAction.accept(filter))
                         .pos(0, 0)
-                        .size(100, 20)
+                        .size(100, 26)
                         .build();
                 this.deleteButton = Button.builder(Component.literal("X").withStyle(ChatFormatting.RED), button -> deleteAction.accept(filter))
                         .pos(0, 0)
@@ -271,11 +272,11 @@ public class ConfigScreen extends Screen {
 
             @Override
             public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float a) {
-                int y = this.getContentY() - 1;
-                this.toggleButton.setPosition(this.getContentX(), y);
+                int y = this.getContentY() + 5;
+                this.toggleButton.setPosition(this.getContentX(), y + 3);
                 this.toggleButton.extractRenderState(graphics, mouseX, mouseY, a);
 
-                this.deleteButton.setPosition(this.getContentRight() - this.deleteButton.getWidth(), y);
+                this.deleteButton.setPosition(this.getContentRight() - this.deleteButton.getWidth(), y + 3);
                 this.deleteButton.extractRenderState(graphics, mouseX, mouseY, a);
 
                 int filterButtonX = this.toggleButton.getRight() + PADDING;

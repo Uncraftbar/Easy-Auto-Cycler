@@ -110,43 +110,28 @@ public class FilterEntry {
      */
     public Component getDisplayName() {
         MutableComponent component = Component.empty();
-        
+
         if (enchantmentId != null) {
-            // Display the enchantment info
-            String enchName = enchantmentId.toString();
-            // Show just the path part for cleaner display
-            String displayName = enchName.contains(":") ? enchName.substring(enchName.indexOf(":") + 1) : enchName;
-            component.append(Component.literal(displayName).withStyle(ChatFormatting.AQUA));
-            component.append(Component.literal(" (Lvl " + enchantmentLevel + ")").withStyle(ChatFormatting.GRAY));
-            
+            component.append(Component.literal(enchantmentId.getPath()).withStyle(ChatFormatting.AQUA));
+            component.append(Component.literal("  Lv. " + enchantmentLevel).withStyle(ChatFormatting.GRAY));
+
             if (itemId != null) {
-                // We have both enchantment and item
-                component.append(Component.literal(" on ").withStyle(ChatFormatting.WHITE));
-                String itemName = itemId.toString();
-                String itemDisplayName = itemName.contains(":") ? itemName.substring(itemName.indexOf(":") + 1) : itemName;
-                component.append(Component.literal(itemDisplayName).withStyle(ChatFormatting.GOLD));
-                
-                if (minCount > 1) {
-                    component.append(Component.literal(" x" + minCount).withStyle(ChatFormatting.GRAY));
-                }
+                component.append(Component.literal("  •  ").withStyle(ChatFormatting.DARK_GRAY));
+                component.append(Component.literal(itemId.getPath()).withStyle(ChatFormatting.GOLD));
             }
         } else if (itemId != null) {
-            // Only item, no enchantment
-            String itemName = itemId.toString();
-            String itemDisplayName = itemName.contains(":") ? itemName.substring(itemName.indexOf(":") + 1) : itemName;
-            component.append(Component.literal(itemDisplayName).withStyle(ChatFormatting.GOLD));
-            
-            if (minCount > 1) {
-                component.append(Component.literal(" x" + minCount).withStyle(ChatFormatting.GRAY));
-            }
+            component.append(Component.literal(itemId.getPath()).withStyle(ChatFormatting.GOLD));
         } else {
-            // Neither enchantment nor item - show "Empty filter"
             component.append(Component.literal("Empty filter").withStyle(ChatFormatting.RED));
         }
-        
-        // Add price info
-        component.append(Component.literal(" (≤" + maxPrice + "💠)").withStyle(ChatFormatting.GREEN));
-        
+
+        if (itemId != null && minCount > 1) {
+            component.append(Component.literal("  ×" + minCount).withStyle(ChatFormatting.GRAY));
+        }
+        component.append(Component.literal("  •  ≤" + maxPrice + " ").withStyle(ChatFormatting.DARK_GRAY));
+        component.append(Component.literal(paymentItemId == null ? "emeralds" : paymentItemId.getPath())
+                .withStyle(ChatFormatting.GREEN));
+
         return component;
     }
 }

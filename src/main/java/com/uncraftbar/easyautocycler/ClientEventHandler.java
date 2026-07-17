@@ -83,6 +83,7 @@ public class ClientEventHandler {
 
     private static class CycleAwareImageButton extends CustomImageButton {
         private final MerchantScreen merchantScreen;
+        private boolean cycleAvailable;
 
         CycleAwareImageButton(MerchantScreen merchantScreen, int x, int y, int width, int height,
                               Identifier textureNormal, Identifier textureHover,
@@ -92,21 +93,24 @@ public class ClientEventHandler {
         }
 
         private void refreshCycleAvailability() {
-            boolean canCycle = AutomationManager.INSTANCE.canCycleTrades(this.merchantScreen.getMenu());
-            this.visible = canCycle;
-            this.active = canCycle;
+            // Keep visible=true: Minecraft stops invoking the inner render hook for invisible widgets,
+            // which would permanently prevent a temporarily unavailable button from recovering.
+            this.cycleAvailable = AutomationManager.INSTANCE.canCycleTrades(this.merchantScreen.getMenu());
+            this.active = this.cycleAvailable;
         }
 
         @Override
         protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
             refreshCycleAvailability();
-            super.extractContents(graphics, mouseX, mouseY, partialTicks);
+            if (this.cycleAvailable) {
+                super.extractContents(graphics, mouseX, mouseY, partialTicks);
+            }
         }
 
         @Override
         public void onPress(InputWithModifiers input) {
             refreshCycleAvailability();
-            if (this.visible && this.active) {
+            if (this.cycleAvailable) {
                 super.onPress(input);
             }
         }

@@ -3,8 +3,8 @@ package com.uncraftbar.easyautocycler;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 import com.uncraftbar.easyautocycler.config.ClientConfig;
-import com.uncraftbar.easyautocycler.mixin.ScreenAccessorMixin;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -52,11 +52,12 @@ public class ClientEventHandler {
             CustomImageButton toggleButton = new CycleAwareImageButton(
                     merchantScreen, toggleButtonX, toggleButtonY, buttonWidth, buttonHeight, PLAY_BUTTON_NORMAL_RL, PLAY_BUTTON_HOVER_RL, Component.translatable("gui.easyautocycler.button.toggle.tooltip"), (button) -> { AutomationManager.INSTANCE.toggle(); } );
 
-            ScreenAccessorMixin accessor = (ScreenAccessorMixin) screen;
-            accessor.getChildren().add(configButton);
-            accessor.getRenderables().add(configButton);
-            accessor.getChildren().add(toggleButton);
-            accessor.getRenderables().add(toggleButton);
+            // Fabric's button view keeps renderables, selectable/narratable widgets, and
+            // event-listener children synchronized. Mutating only Screen's children and
+            // renderables lists leaves those collections with different button counts,
+            // which makes other AFTER_INIT handlers (such as Mindful Darkness) crash.
+            Screens.getButtons(screen).add(configButton);
+            Screens.getButtons(screen).add(toggleButton);
             EasyAutoCyclerMod.LOGGER.debug("Added Config and Toggle custom image buttons to MerchantScreen.");
         }
     }

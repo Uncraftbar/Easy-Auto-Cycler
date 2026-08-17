@@ -3,7 +3,6 @@
   "package": "com.uncraftbar.easyautocycler.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "ScreenAccessorMixin",
     "ClientPacketListenerMixin"
   ],
   "injectors": {

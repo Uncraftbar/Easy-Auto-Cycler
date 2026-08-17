@@ -1,9 +1,8 @@
-# v3.1.0 - Redesigned Filter Configuration
+# v3.1.1 - Fabric 1.20.1 Widget Registration Fix
 
 ## Changes
 
-- Redesigned the filter configuration screens with a cleaner, responsive layout.
-- Added namespace-free item and enchantment ID autocomplete across all mod namespaces.
-- Added a mouse- and keyboard-selectable autocomplete list.
-- Reorganized filter fields and improved filter summaries.
-- Ported the new interface across every supported Minecraft version and mod loader.
+- Register merchant-screen buttons through Fabric Screen API instead of mutating Minecraft widget lists directly.
+- Improves screen lifecycle compatibility when returning to or resizing merchant screens.
+
+This release is for **Minecraft 1.20.1 Fabric only**.

@@ -4,10 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version shared by every release branch
+        description: Version to publish
         required: true
-        default: 3.1.0
+        default: 3.1.1
         type: string
+      target:
+        description: Release set to build and publish
+        required: true
+        default: fabric-1.20.1
+        type: choice
+        options:
+          - fabric-1.20.1
+          - all
       publish:
         description: Upload to Modrinth, CurseForge, and GitHub Releases (disabled means dry run)
         required: true
@@ -37,37 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - branch: fabric-1.20.1
-            java: 17
-            archive: easyautocycler-fabric-1.20.1
-          - branch: forge-1.20.1
-            java: 17
-            archive: easyautocycler-forge-1.20.1
-          - branch: fabric-1.21.1
-            java: 21
-            archive: easyautocycler-fabric-1.21.1
-          - branch: neoforge-1.21.1
-            java: 21
-            archive: easyautocycler-neoforge-1.21.1
-          - branch: fabric-1.21.11
-            java: 21
-            archive: easyautocycler-fabric-1.21.11
-          - branch: neoforge-1.21.11
-            java: 21
-            archive: easyautocycler-neoforge-1.21.11
-          - branch: fabric-26.1.2
-            java: 25
-            archive: easyautocycler-fabric-26.1.2
-          - branch: neoforge-26.1.2
-            java: 25
-            archive: easyautocycler-neoforge-26.1.2
-          - branch: fabric-26.2
-            java: 25
-            archive: easyautocycler-fabric-26.2
-          - branch: neoforge-26.2
-            java: 25
-            archive: easyautocycler-neoforge-26.2
+        include: ${{ fromJSON(inputs.target == 'fabric-1.20.1' && '[{"branch":"fabric-1.20.1","java":17,"archive":"easyautocycler-fabric-1.20.1"}]' || '[{"branch":"fabric-1.20.1","java":17,"archive":"easyautocycler-fabric-1.20.1"},{"branch":"forge-1.20.1","java":17,"archive":"easyautocycler-forge-1.20.1"},{"branch":"fabric-1.21.1","java":21,"archive":"easyautocycler-fabric-1.21.1"},{"branch":"neoforge-1.21.1","java":21,"archive":"easyautocycler-neoforge-1.21.1"},{"branch":"fabric-1.21.11","java":21,"archive":"easyautocycler-fabric-1.21.11"},{"branch":"neoforge-1.21.11","java":21,"archive":"easyautocycler-neoforge-1.21.11"},{"branch":"fabric-26.1.2","java":25,"archive":"easyautocycler-fabric-26.1.2"},{"branch":"neoforge-26.1.2","java":25,"archive":"easyautocycler-neoforge-26.1.2"},{"branch":"fabric-26.2","java":25,"archive":"easyautocycler-fabric-26.2"},{"branch":"neoforge-26.2","java":25,"archive":"easyautocycler-neoforge-26.2"}]') }}
 
     steps:
       - name: Checkout ${{ matrix.branch }}
@@ -112,7 +90,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    name: ${{ inputs.publish && 'Publish' || 'Dry run' }} ${{ inputs.version }}
+    name: ${{ inputs.publish && 'Publish' || 'Dry run' }} ${{ inputs.version }} (${{ inputs.target }})
     needs: build
     runs-on: ubuntu-latest
 
@@ -122,7 +100,7 @@ jobs:
         with:
           ref: main
 
-      - name: Download all release jars
+      - name: Download release jars
         uses: actions/download-artifact@v4
         with:
           pattern: release-*
@@ -134,7 +112,9 @@ jobs:
         run: |
           find release/artifacts -maxdepth 1 -type f -name '*.jar' -print | sort
           count="$(find release/artifacts -maxdepth 1 -type f -name '*.jar' | wc -l)"
-          test "$count" -eq 10
+          expected=10
+          if [[ "${{ inputs.target }}" != "all" ]]; then expected=1; fi
+          test "$count" -eq "$expected"
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
@@ -152,9 +132,7 @@ jobs:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
         run: |
           dry_run=true
-          if [[ "${{ inputs.publish }}" == "true" ]]; then
-            dry_run=false
-          fi
+          if [[ "${{ inputs.publish }}" == "true" ]]; then dry_run=false; fi
           publish_task=publishMods
           if [[ "${{ inputs.destination }}" == "modrinth" ]]; then
             publish_task=publishModrinthAll
@@ -163,6 +141,7 @@ jobs:
           fi
           ./release/gradlew -p release --no-daemon "$publish_task" \
             -PreleaseVersion="${{ inputs.version }}" \
+            -PreleaseTarget="${{ inputs.target }}" \
             -PdryRun="$dry_run"
 
       - name: Create or update GitHub Release
@@ -187,6 +166,6 @@ jobs:
         if: ${{ ! inputs.publish }}
         uses: actions/upload-artifact@v4
         with:
-          name: publish-dry-run-${{ inputs.version }}
+          name: publish-dry-run-${{ inputs.version }}-${{ inputs.target }}
           path: release/build
           if-no-files-found: error

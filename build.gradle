@@ -6,6 +6,10 @@ plugins {
     id 'net.neoforged.gradle.userdev' version '7.1.38'
 }
 
+if (!neo_version) {
+    throw new GradleException('NeoForge 26.3 port BLOCKED: no upstream NeoForge 26.3 artifact verified. See PORT-STATUS.md; do not substitute NeoForge 26.2.')
+}
+
 tasks.named('wrapper', Wrapper).configure {
     distributionType = Wrapper.DistributionType.BIN
 }

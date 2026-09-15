@@ -1,8 +1,9 @@
-{  "key.category.easyautocycler": "Easy Auto Cycler",
+{
   "key.easyautocycler.toggle_auto_trade": "Toggle Auto Trade Cycling",
   "key.easyautocycler.open_config": "Open Auto Cycler Config",
   "gui.easyautocycler.config.title": "Easy Auto Cycler Configuration",
-  "gui.easyautocycler.config.mode": "Mode",  "gui.easyautocycler.config.mode.enchantment": "Enchantment",
+  "gui.easyautocycler.config.mode": "Mode",
+  "gui.easyautocycler.config.mode.enchantment": "Enchantment",
   "gui.easyautocycler.config.mode.item": "Item",
   "gui.easyautocycler.config.enchantment_id": "Enchantment ID (e.g. minecraft:mending) - Works on any item",
   "gui.easyautocycler.config.item_id": "Item ID (e.g. minecraft:diamond_sword)",
@@ -19,7 +20,8 @@
   "gui.easyautocycler.config.drop_hint": "Drop Book",
   "gui.easyautocycler.config.error.invalid_id": "Unknown Enchantment ID: '%s'",
   "gui.easyautocycler.config.error.invalid_level": "Invalid Level: %s",
-  "gui.easyautocycler.config.error.invalid_price": "Invalid Price (1-64): %s",  "gui.easyautocycler.config.error.level_too_high": "Level %s too high (Max: %s)",
+  "gui.easyautocycler.config.error.invalid_price": "Invalid Price (1-64): %s",
+  "gui.easyautocycler.config.error.level_too_high": "Level %s too high (Max: %s)",
   "gui.easyautocycler.config.error.validation_failed": "Error: %s",
   "gui.easyautocycler.config.error.no_ench_data": "Item has no enchantment data.",
   "gui.easyautocycler.config.error.invalid_item_id": "Unknown Item ID: '%s'",
@@ -29,15 +31,15 @@
   "gui.easyautocycler.button.toggle.tooltip_start": "Start",
   "gui.easyautocycler.button.toggle.tooltip_stop": "Stop",
   "gui.easyautocycler.config.error.not_a_book": "Please drop an Enchanted Book!",
-
   "gui.easyautocycler.button.config.tooltip": "Configure Auto Cycler",
   "gui.easyautocycler.button.toggle.tooltip": "Toggle Auto Cycling",
   "chat.easyautocycler.started": "Started auto trade cycling.",
-  "chat.easyautocycler.stopped.reason": "Stopped auto trade cycling: %s",  "chat.easyautocycler.found": "§aTarget trade found!",
+  "chat.easyautocycler.stopped.reason": "Stopped auto trade cycling: %s",
+  "chat.easyautocycler.found": "§aTarget trade found!",
   "chat.easyautocycler.item_found": "§aTarget item trade found!",
-  "chat.easyautocycler.notfound": "Could not find target trade.",  "chat.easyautocycler.error.noscreen": "Error: Villager trade screen not open.",
+  "chat.easyautocycler.notfound": "Could not find target trade.",
+  "chat.easyautocycler.error.noscreen": "Error: Villager trade screen not open.",
   "chat.easyautocycler.error.noconfig": "Warning: No target trade configured. Cycling will not stop automatically.",
-  
   "gui.easyautocycler.filters.title": "Trade Filters",
   "gui.easyautocycler.filters.add": "Add Filter",
   "gui.easyautocycler.filters.add_compact": "+ New Filter",
@@ -54,7 +56,6 @@
   "gui.easyautocycler.filters.no_filters": "No filters defined. Click 'Add Filter' to create one.",
   "gui.easyautocycler.filters.empty_title": "No trade filters yet",
   "gui.easyautocycler.filters.empty_hint": "Create one to choose when cycling stops.",
-  
   "gui.easyautocycler.filter.title": "Edit Filter",
   "gui.easyautocycler.filter.subtitle": "Type an ID without its namespace; use arrows and Tab to complete.",
   "gui.easyautocycler.filter.enchantment_id": "Enchantment ID (optional)",
@@ -76,5 +77,6 @@
   "gui.easyautocycler.filter.error.invalid_count": "Invalid count: %s",
   "gui.easyautocycler.filter.error.invalid_payment_item": "Unknown payment item ID: '%s'",
   "gui.easyautocycler.filter.error.invalid_price": "Invalid price (1-64): %s",
-  "gui.easyautocycler.filter.error.no_criteria": "Error: Set at least one of: Enchantment ID or Item ID"
+  "gui.easyautocycler.filter.error.no_criteria": "Error: Set at least one of: Enchantment ID or Item ID",
+  "key.category.easyautocycler.auto_cycler": "Easy Auto Cycler"
 }

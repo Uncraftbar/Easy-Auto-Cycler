@@ -6,7 +6,7 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,18 +72,18 @@ public class SuggestingEditBox extends EditBox {
     @Override
     public boolean keyPressed(KeyEvent event) {
         if (isFocused() && !matches.isEmpty()) {
-            if (event.key() == GLFW.GLFW_KEY_DOWN) {
+            if (event.key() == InputConstants.KEY_DOWN) {
                 selectedSuggestion = (selectedSuggestion + 1) % matches.size();
                 updateInlineSuggestion();
                 return true;
             }
-            if (event.key() == GLFW.GLFW_KEY_UP) {
+            if (event.key() == InputConstants.KEY_UP) {
                 selectedSuggestion = (selectedSuggestion - 1 + matches.size()) % matches.size();
                 updateInlineSuggestion();
                 return true;
             }
-            if (event.key() == GLFW.GLFW_KEY_TAB || event.key() == GLFW.GLFW_KEY_ENTER
-                    || event.key() == GLFW.GLFW_KEY_KP_ENTER) {
+            if (event.key() == InputConstants.KEY_TAB || event.key() == InputConstants.KEY_RETURN
+                    || event.key() == InputConstants.KEY_NUMPADENTER) {
                 acceptSuggestion(selectedSuggestion);
                 return true;
             }

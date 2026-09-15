@@ -40,11 +40,12 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api-base:${fabric_api_base_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-key-mapping-api-v1:${fabric_key_mapping_api_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-screen-api-v1:${fabric_screen_api_version}"
-    runtimeOnly "net.fabricmc.fabric-api:fabric-resource-loader-v0:${fabric_resource_loader_version}"
+    runtimeOnly "net.fabricmc.fabric-api:fabric-resource-loader-v1:${fabric_resource_loader_version}"
     runtimeOnly "net.fabricmc.fabric-api:fabric-networking-api-v1:${fabric_networking_api_version}"
 
-    modCompileOnly "curse.maven:trader-cycling-570431:${trade_cycling_file_id}"
-    modRuntimeOnly "curse.maven:trader-cycling-570431:${trade_cycling_file_id}"
+    if (trade_cycling_file_id) {
+        modRuntimeOnly "curse.maven:trader-cycling-570431:${trade_cycling_file_id}"
+    }
 }
 
 processResources {

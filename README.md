@@ -1,5 +1,8 @@
 # Easy Auto Cycler
 
+> Local 26.3 Fabric candidate: clean build passed, gameplay/integration unverified.
+> Read [PORT-STATUS.md](PORT-STATUS.md) before installing or releasing.
+
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_1242344_downloads.svg?badge_style=flat)](https://curseforge.com/minecraft/mc-mods/easy-auto-cycler)
 [![Modrinth](https://img.shields.io/badge/dynamic/json?labelColor=black&color=grey&label=&suffix=%20downloads&query=downloads&url=https://api.modrinth.com/v2/project/easy-auto-cycler&style=flat&logo=modrinth)](https://modrinth.com/mod/easy-auto-cycler)
 [![GitHub license](https://img.shields.io/github/license/Uncraftbar/Easy-Auto-Cycler)](LICENSE)

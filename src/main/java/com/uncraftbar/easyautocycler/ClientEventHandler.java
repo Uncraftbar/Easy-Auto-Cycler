@@ -1,10 +1,8 @@
 package com.uncraftbar.easyautocycler;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 import com.uncraftbar.easyautocycler.gui.CustomImageButton;
 import com.uncraftbar.easyautocycler.config.ClientConfig;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.client.screen.v1.Screens;
 import net.minecraft.client.Minecraft;
@@ -33,9 +31,7 @@ public class ClientEventHandler {
 
         ScreenKeyboardEvents.beforeKeyPress(screen).register((s, event) -> {
             if (Keybindings.toggleAutoTradeKey == null) return;
-            InputConstants.Key bound = KeyMappingHelper.getBoundKeyOf(Keybindings.toggleAutoTradeKey);
-            if (bound.getType() != InputConstants.Type.KEYSYM) return;
-            if (event.key() != bound.getValue()) return;
+            if (!Keybindings.toggleAutoTradeKey.matches(event)) return;
             AutomationManager.INSTANCE.toggle();
         });
     }

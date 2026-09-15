@@ -4,7 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 
 public class Keybindings {
 
@@ -20,15 +19,15 @@ public class Keybindings {
     public static void registerKeyMappings() {
         toggleAutoTradeKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 KEY_TOGGLE_AUTO_TRADE,
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_R,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_R,
                 CATEGORY
         ));
 
         openConfigKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 KEY_OPEN_CONFIG,
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_C,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_C,
                 CATEGORY
         ));
 

@@ -153,7 +153,7 @@ Results, all from `runs/client-trade-cycling/logs/`:
 | Cycle round-trip (no-match filter) | `Received merchant-offers acknowledgement for cycle N` x3000 |
 | Find-and-stop (`bell`, ≤64 emeralds) | `Target trade found: bell  •  ≤64 emeralds` within 3 ms, then stopped |
 | No false positive (`diamond` x64, ≤1 emerald) | 3000 cycles, never reported a find |
-| Pacing after the fix | 43 acknowledgements in ~5 s (~2 ticks/cycle) |
+| Pacing after the fix | 119 acknowledgements in 13.8 s (8.6 cycles/s, ~2 ticks/cycle) |
 | Dedicated server | `Done (0.449s)! For help, type "help"`, no `NoClassDefFoundError` |
 
 The previous "no acknowledgement" failure was **not** a mod or Trade Cycling defect: the
@@ -169,6 +169,18 @@ instantly, making the safety limit meaningless and spamming the server. Added
 `MIN_CYCLE_DELAY_TICKS = 2` (the previous default click delay), applied from the moment an
 acknowledgement is received. Measured after the fix: ~2 ticks/cycle, so the 3000-cycle limit
 now corresponds to about 5 minutes of real cycling.
+
+Reproduced evidence kept outside the worktree (relative to this directory):
+
+| File | Content |
+|---|---|
+| `../neoforge-26.3-cyclefix-runA-3000-acks-nomatch.log` | 3000 acknowledgements in ~0.4 s, pre-fix, no false-positive find |
+| `../neoforge-26.3-cyclefix-runB-bell-found.log` | `Target trade found: bell  •  ≤64 emeralds` then stop |
+| `../neoforge-26.3-cyclefix-runC-pacing-debug.log` | post-fix pacing, cycles 1..120 over 13.8 s |
+| `../_evidence-26.3/neoforge-26.3-cyclefix-merchant-screen-with-jobsite.png` | open trade screen used for the test |
+
+Note the run order: Run A (no-match filter) ran **before** the pacing fix, Run B (bell
+filter) also ran before it, and Run C (pacing) ran after.
 
 ### Test-environment notes (not mod defects)
 

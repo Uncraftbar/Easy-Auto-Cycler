@@ -68,24 +68,24 @@ Logs: `../neoforge-26.3-runclient-world5.log`, `../neoforge-26.3-build-26.3.log`
 
 ## Known limitations — do not overclaim
 
-- **The cycle round-trip was not confirmed.** The first cycle timed out:
+- ~~**The cycle round-trip was not confirmed.**~~ **RESOLVED — see the follow-up section
+  below.** The first cycle timed out:
   `No merchant-offers acknowledgement received after 100 ticks` →
   `Stopping villager trade cycling. Reason: Merchant offers update timed out`. `R`
-  is detected and cycling starts, but no cycling loop was observed end to end.
-  Unresolved: I could not locate Trade Cycling's own in-screen cycle button reliably
-  by pixel scanning to compare its behaviour in isolation, so it is not established
-  whose side the missing acknowledgement is on. Treat end-to-end cycling as open.
+  is detected and cycling starts. The cause was the test villager having no claimed
+  workstation; with one present, 3000 cycles round-trip and a filter find-and-stop
+  works. Trade Cycling's own in-screen cycle button was never needed to settle this —
+  the decompiled server path settles it. Only the real-GPU client re-test stays open.
 - **The clean-build claim is narrower than it sounds.** `clean build` passed while
   NeoForm's cached vanilla recompilation was still present; deleting the NeoForm
   cache forces a full ~7,000-file recompile. That path succeeded earlier in this
   session with 7.1.38 (failing only on `HolderSet`, which 7.1.39 fixes), but a
   from-empty-cache build has not been re-run end to end with the final files.
-- **Dedicated servers cannot load this mod.** `./gradlew runServer` fails with
-  `NoClassDefFoundError: net/minecraft/client/resources/sounds/SoundInstance` —
-  `AutomationManager` imports client-only types (`Minecraft`, `MerchantScreen`) and
-  even `commonSetup` touches them. Behaviour is unchanged from `neoforge-26.2`; it
-  is only newly observed. 26.3's `[26.3,26.4)` metadata is still advertised for both
-  sides, so a client-only side should be considered before any release.
+- ~~**Dedicated servers cannot load this mod.**~~ **RESOLVED — see the follow-up section
+  below.** `./gradlew runServer` formerly failed with
+  `NoClassDefFoundError: net/minecraft/client/resources/sounds/SoundInstance` because the
+  common entrypoint registered client listeners. Fixed by splitting the entrypoint; the
+  server now starts and no-ops cleanly.
 - Running the UI on llvmpipe with no sound device produced `Failed to open OpenAL
   device` and a `minecraft:end_of_frame` post-effect warning; both are environmental,
   not mod defects. Blur was not exercised (no world blur on these screens).

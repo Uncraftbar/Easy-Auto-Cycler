@@ -1,5 +1,6 @@
 package com.uncraftbar.easyautocycler;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.uncraftbar.easyautocycler.gui.ConfigScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -7,7 +8,6 @@ import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.InputEvent;
-import org.lwjgl.glfw.GLFW;
 
 public class InputHandler {
 
@@ -18,7 +18,7 @@ public class InputHandler {
 
         if (currentScreen instanceof MerchantScreen
                 && Keybindings.toggleAutoTradeKey != null
-                && event.getAction() == GLFW.GLFW_PRESS
+                && event.getAction() == InputConstants.PRESS
                 && Keybindings.toggleAutoTradeKey.matches(event.getKeyEvent())) {
             EasyAutoCyclerMod.LOGGER.info("--- Toggle Key Pressed (MerchantScreen)! ---");
             AutomationManager.INSTANCE.toggle();

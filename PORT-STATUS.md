@@ -1,27 +1,183 @@
-# NeoForge 26.3 — blocked preparation, not a supported port
+# NeoForge 26.3 — ported, client-tested, not published
 
-Checked 2026-09-15 UTC. Minecraft **26.3 release** exists (Mojang release time
-11:23:02Z), but NeoForge Maven metadata contains **no 26.3 artifact**; latest
-listed version is 26.2.0.88. No version is invented and no 26.2 build is relabelled.
+Local-only preparation. No push, tag, release workflow or publisher task was run.
+Version `3.1.2-local.26.3` is a local candidate identifier, not an approved release.
 
-Base: origin/neoforge-26.2 `b471419`, plus pending PR #39 keybinding category fix.
-The local branch reserves 26.3 metadata but intentionally fails at configuration
-with a clear error until real loader and integration dependencies are available.
-Inherited integration coordinates in build.gradle remain **26.2 reference only**
-behind this guard; they must be replaced before removing the guard.
+Base: `origin/neoforge-26.2` (`eebffce`) plus the reviewed keybinding-category fix.
 
-Upstream evidence:
-- https://piston-meta.mojang.com/mc/game/version_manifest_v2.json
-- https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml
-- https://api.modrinth.com/v2/project/trade-cycling/version?game_versions=%5B%2226.3%22%5D (empty)
-- https://api.modrinth.com/v2/project/easy-villagers/version?game_versions=%5B%2226.3%22%5D (empty)
+## Pinned dependencies (verified 2026-09-25 UTC)
 
-No loadable artifact, runtime test, or support claim. Recheck upstream, pin the
-actual NeoForge and optional integration artifacts, adapt APIs, build, and run
-client trade/GUI tests before enabling any release target. A Gradle build failure
-at the guard is expected, not successful port validation.
+- Minecraft 26.3 (release, published 2026-09-15T11:23:02Z).
+- NeoForge `26.3.0.22-beta` — latest 26.3 entry in
+  `https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml`.
+- **NeoGradle `7.1.39`** (was 7.1.38). Required: NeoForge >= 26.2.0.87 ships an
+  access transformer that makes older NeoGradle fail while recompiling patched
+  `HolderSet.java` ("contents() ... cannot override", NeoForge issues #3490 /
+  #3518). With 7.1.38 `:neoFormRecompile` aborts before our code is compiled.
+- Optional integrations stay **reflection-based**, so they are not compile or
+  published dependencies. Local test jars are ignored by git (`libs/`), not vendored:
 
-Observed local `./gradlew --no-daemon --max-workers=2 build` failed in 27s with
-the explicit guard message (and a secondary NeoGradle missing-toolchain message
-because configuration was deliberately interrupted). Log:
-`../neoforge-26.3-build.log`. No jar was produced.
+| Jar | Source | SHA-1 |
+|---|---|---|
+| `trade-cycling-neoforge-1.0.22+26.3.jar` | Modrinth `eYmTi0EJ` | `ff375f4c53eaff99faa5db734079f3dca0554812` |
+| `easy-villagers-neoforge-1.1.43+26.3.jar` | Modrinth `CdpNBYv0` | `604f49e2d5fca0f7a2fc78be93eff814da69920e` |
+
+Superseded 26.2 dev-compile stub preserved at
+`../_deps-26.3/superseded/easy-villagers-neoforge-1.1.42+26.2.jar`.
+
+## Source changes for 26.3
+
+26.3 removed the GLFW keyboard dependency and `InputConstants.Type.KEYSYM`.
+
+- `Keybindings.java`: `InputConstants.Type.KEYBOARD` with native
+  `InputConstants.KEY_R` / `KEY_C`; the mod category is now registered explicitly
+  through `RegisterKeyMappingsEvent#registerCategory` instead of the deprecated
+  `KeyMapping.Category.register(Identifier)`.
+- `InputHandler.java`: key-press test uses `InputConstants.PRESS` instead of
+  `GLFW.GLFW_PRESS`; `KeyMapping#matches(KeyEvent)` now also handles unbound keys.
+- `build.gradle`: NeoGradle 7.1.39; blocked-guard removed; dependency wiring
+  replaced by absent-tolerant local test jars; optional dev-only
+  `-PquickPlayWorld=<name>` launch argument for manual testing.
+- `.gitignore`: `libs/` (test jars are not vendored).
+
+Nothing else was touched. `runs/`, filters and existing local gitignores are intact.
+
+## Validation performed
+
+`./gradlew --no-daemon --max-workers=2 clean build` → BUILD SUCCESSFUL.
+
+Real client launches on a **private headless Xvfb display** (`:99`, llvmpipe), so no
+live desktop session was used:
+
+1. Dev client reached the main menu with 4 mods loaded; `easyautocycler.mixins.json`
+   was prepared and `Registered key mappings` logged.
+2. Quick-played into a flat test world; the mixin applied:
+   `Mixing ClientPacketListenerMixin from easyautocycler.mixins.json into
+   net.minecraft.client.multiplayer.ClientPacketListener`, mapping to 26.3's real
+   `handleMerchantOffers` (no missing-mixin error), and
+   `Trade Cycling mod is loaded` / `Trade Cycling support enabled`.
+3. Spawned beside a villager trader and opened its trade screen (client produced the
+   real MerchantScreen; "Apprentice" observed).
+4. Pressing `R` in the trade screen exercised the full path:
+   `--- Toggle Key Pressed (MerchantScreen)! ---`,
+   `Starting network-synchronized villager trade cycling.` and
+   `Auto-cycling started. Press button again to stop.`
+
+Evidence screenshots: `../_evidence-26.3/` (main menus, world loaded, trader screen).
+Logs: `../neoforge-26.3-runclient-world5.log`, `../neoforge-26.3-build-26.3.log`.
+
+## Known limitations — do not overclaim
+
+- **The cycle round-trip was not confirmed.** The first cycle timed out:
+  `No merchant-offers acknowledgement received after 100 ticks` →
+  `Stopping villager trade cycling. Reason: Merchant offers update timed out`. `R`
+  is detected and cycling starts, but no cycling loop was observed end to end.
+  Unresolved: I could not locate Trade Cycling's own in-screen cycle button reliably
+  by pixel scanning to compare its behaviour in isolation, so it is not established
+  whose side the missing acknowledgement is on. Treat end-to-end cycling as open.
+- **The clean-build claim is narrower than it sounds.** `clean build` passed while
+  NeoForm's cached vanilla recompilation was still present; deleting the NeoForm
+  cache forces a full ~7,000-file recompile. That path succeeded earlier in this
+  session with 7.1.38 (failing only on `HolderSet`, which 7.1.39 fixes), but a
+  from-empty-cache build has not been re-run end to end with the final files.
+- **Dedicated servers cannot load this mod.** `./gradlew runServer` fails with
+  `NoClassDefFoundError: net/minecraft/client/resources/sounds/SoundInstance` —
+  `AutomationManager` imports client-only types (`Minecraft`, `MerchantScreen`) and
+  even `commonSetup` touches them. Behaviour is unchanged from `neoforge-26.2`; it
+  is only newly observed. 26.3's `[26.3,26.4)` metadata is still advertised for both
+  sides, so a client-only side should be considered before any release.
+- Running the UI on llvmpipe with no sound device produced `Failed to open OpenAL
+  device` and a `minecraft:end_of_frame` post-effect warning; both are environmental,
+  not mod defects. Blur was not exercised (no world blur on these screens).
+- No 1.21.1-era blur rule applies: these screens draw in one `extractRenderState`
+  pass with no manual `renderBackground` call.
+
+Before enabling any release target: re-check upstream 26.3 artifacts and complete a
+real (GPU) client test.
+
+## Follow-up 2026-09-25 (2) — both blockers diagnosed, cycling root cause confirmed
+
+### Dedicated-server crash: fixed by splitting the entrypoint
+
+`NoClassDefFoundError: net/minecraft/client/resources/sounds/SoundInstance` was reproduced
+and fixed. Cause: `EasyAutoCyclerMod` was the *common* entrypoint and registered three
+listener method references, two of which (`clientSetup`, `registerKeybindings`) reach
+client-only code (`ClientEventHandler`, `InputHandler`, `Keybindings`, `AutomationManager`).
+Verifying those references on a dedicated server made the loader resolve `SoundInstance`,
+which does not exist there, aborting startup.
+
+`EasyAutoCyclerMod` now registers only `commonSetup` and references no `net.minecraft.client.*`
+type. Client wiring moved to a second, client-only entrypoint
+`com.uncraftbar.easyautocycler.EasyAutoCyclerClientMod` annotated
+`@Mod(value = MODID, dist = Dist.CLIENT)`. `AutomationManager.initialize()` moved from
+common setup to client setup, matching its client-only state (current screen, sound manager).
+
+### Cycling timeout: root cause is the villager, not the mod
+
+Decompiled `trade-cycling-neoforge-1.0.22+26.3.jar` (Vineflower 1.11.1) and read the server
+side. `TradeCyclingMod.onCycleTrades` sends `player.sendMerchantOffers(...)` only when all of:
+
+- the player's open menu is a `MerchantMenu`,
+- `getTraderXp() <= 0` **or** `MerchantContainer#getActiveOffer()` is null, and
+- **`villager.getBrain().getMemory(MemoryModuleType.JOB_SITE)` is non-empty.**
+
+If any condition fails it `return`s silently — no log line, no packet. The test villager was
+`/summon`ed at `0.5, -60.0, 4.5` with `NoAI: 1`, profession `minecraft:weaponsmith`, level 2,
+`Xp: 0`, two offers, and an **empty `Brain.memories`**: no claimed workstation. The server
+therefore accepted the cycle packet and dropped it, which is exactly the observed
+"no acknowledgement after 100 ticks" with no error on either side.
+
+`CAN_CYCLE` is not the problem: client-side `CycleTradesButton.canCycle` is
+`menu.showProgressBar() && menu.getTraderXp() <= 0`, and `AbstractVillager.showProgressBar()`
+returns a constant `true`, so `R` does start cycling. The gap is server-side only.
+
+`EasyAutoCyclerMod` now carries a DEBUG (not TRACE) acknowledgement line so an actual
+round-trip is visible in console logs, and the timeout message names the likely cause.
+
+### Verified end-to-end cycling (local dev client, Xvfb :99, llvmpipe)
+
+With a claimed workstation present, cycling completes. Test setup was done **in-game**,
+so the evidence is real server state, not a mock:
+
+1. `/setblock 1 -61 4 minecraft:grindstone` (weaponsmith job-site POI).
+2. `/data modify entity @e[type=minecraft:villager,limit=1,sort=nearest]
+   Brain.memories."minecraft:job_site" set value
+   {value:{dimension:"minecraft:overworld",pos:[I;1,-61,4]}}`
+   — verified with `/data get`; it also survives a world save.
+3. Right-click the villager, press `R`.
+
+Results, all from `runs/client-trade-cycling/logs/`:
+
+| Check | Result |
+|---|---|
+| Cycle round-trip (no-match filter) | `Received merchant-offers acknowledgement for cycle N` x3000 |
+| Find-and-stop (`bell`, ≤64 emeralds) | `Target trade found: bell  •  ≤64 emeralds` within 3 ms, then stopped |
+| No false positive (`diamond` x64, ≤1 emerald) | 3000 cycles, never reported a find |
+| Pacing after the fix | 43 acknowledgements in ~5 s (~2 ticks/cycle) |
+| Dedicated server | `Done (0.449s)! For help, type "help"`, no `NoClassDefFoundError` |
+
+The previous "no acknowledgement" failure was **not** a mod or Trade Cycling defect: the
+test villager simply had no claimed workstation, exactly as in the scenario above with the
+memory removed.
+
+### Cycle pacing fix (found while validating the above)
+
+Replacing the old fixed "click delay" with acknowledgement-driven stepping removed all
+pacing: on a local server the acknowledgement lands in the same tick, so the loop ran
+**3000 cycles in ~0.4 s** (~7000/s) and burned the entire `MAX_CYCLES_SAFETY` budget almost
+instantly, making the safety limit meaningless and spamming the server. Added
+`MIN_CYCLE_DELAY_TICKS = 2` (the previous default click delay), applied from the moment an
+acknowledgement is received. Measured after the fix: ~2 ticks/cycle, so the 3000-cycle limit
+now corresponds to about 5 minutes of real cycling.
+
+### Test-environment notes (not mod defects)
+
+- `/time query daytime` errors on 26.3 (`Can't find element 'minecraft:daytime' of type
+  'minecraft:timeline'`); 26.3 moved day time to the timeline system. Unrelated to this mod.
+- `cycworld` had `allowCommands=0`, so the dev player was not op and every non-`/help`
+  command failed with "Unknown or incomplete command". Cheats were enabled locally for
+  testing only, via a byte patch of `level.dat`. The original is preserved at
+  `/tmp/cycworld-level-orig.dat` and the whole world at `/tmp/cycworld-backup-234604/`.
+- `runs/client-trade-cycling/ops.json` was added locally as an op fallback; it did not take
+  effect because `isOp` is gated on `isSingleplayerOwner`, so the `level.dat` patch above is
+  what actually enabled commands.

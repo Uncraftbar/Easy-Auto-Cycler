@@ -1,7 +1,8 @@
 # Easy Auto Cycler
 
-> Local NeoForge 26.3 preparation is BLOCKED, not a supported release.
-> No upstream loader exists in the checked metadata; see [PORT-STATUS.md](PORT-STATUS.md).
+> Local NeoForge 26.3 branch: builds, launches a dev client, and the end-to-end
+> cycle round-trip plus find-and-stop are verified locally. Dedicated servers now
+> start cleanly. Nothing is published. See [PORT-STATUS.md](PORT-STATUS.md).
 
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_1242344_downloads.svg?badge)](https://curseforge.com/minecraft/mc-mods/easy-auto-cycler)
 [![Modrinth](https://img.shields.io/badge/dynamic/json?labelColor=black&color=grey&label=&suffix=%20downloads&query=downloads&url=https://api.modrinth.com/v2/project/easy-auto-cycler&style=flat&logo=modrinth)](https://modrinth.com/mod/easy-auto-cycler)

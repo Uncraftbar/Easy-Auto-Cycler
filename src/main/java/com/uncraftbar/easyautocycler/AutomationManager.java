@@ -335,9 +335,12 @@ public class AutomationManager {
                 .collect(Collectors.toList());
 
         if (!enabledFilters.isEmpty() && checkTradesWithFilters(offers)) {
+            // AND-mode matches may have no single winning filter; never dereference null
+            // while reporting a trade that was already present when cycling started.
+            FilterEntry matched = this.lastMatchedFilter;
             Component message = Component.empty()
                     .append(Component.literal("§aTarget trade found: "))
-                    .append(this.lastMatchedFilter.getDisplayName());
+                    .append(matched != null ? matched.getDisplayName() : Component.literal("configured filter"));
             this.sendMessageToPlayer(message);
             playSuccessSound();
             stop("Target trade found with filter");

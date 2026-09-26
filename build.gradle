@@ -23,10 +23,20 @@ repositories {
     }
 }
 
+// Optional 26.3 Trade Cycling jar, used only to launch a local test client.
+// Not vendored in git and not a published dependency.
+def tradeCyclingTestJar = file('libs/trade-cycling-fabric-1.0.22+26.3.jar')
+
 loom {
     runs {
         client {
-            runDir "run-fabric-trade-cycling"
+            runDir "runs/client-trade-cycling"
+            // Test-only launch helper: jump straight into a named singleplayer world so a
+            // headless Xvfb gameplay test needs no menu automation.
+            //   ./gradlew runClient -PquickPlayWorld=cycworld
+            if (project.hasProperty("quickPlayWorld")) {
+                programArgs "--quickPlaySingleplayer", project.property("quickPlayWorld")
+            }
         }
     }
 }
@@ -43,8 +53,13 @@ dependencies {
     runtimeOnly "net.fabricmc.fabric-api:fabric-resource-loader-v1:${fabric_resource_loader_version}"
     runtimeOnly "net.fabricmc.fabric-api:fabric-networking-api-v1:${fabric_networking_api_version}"
 
-    if (trade_cycling_file_id) {
-        modRuntimeOnly "curse.maven:trader-cycling-570431:${trade_cycling_file_id}"
+    // Optional reflection-based integration: no compile-time or published
+    // dependency. The 26.3 test jar is a local-only launch input and is not
+    // vendored in git; see PORT-STATUS.md for provenance and SHA-1.
+    if (tradeCyclingTestJar.exists()) {
+        modRuntimeOnly files(tradeCyclingTestJar)
+    } else {
+        logger.lifecycle("Trade Cycling test jar missing: ${tradeCyclingTestJar}")
     }
 }
 

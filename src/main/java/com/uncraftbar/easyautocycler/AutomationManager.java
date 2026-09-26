@@ -44,9 +44,21 @@ public class AutomationManager {
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
     private boolean waitingForOfferUpdate = false;
     private int waitingForOfferTicks = 0;
+    private int cycleCooldownTicks = 0;
     private int currentCycles = 0;
     private static final int MAX_CYCLES_SAFETY = 3000;
     private static final int OFFER_UPDATE_TIMEOUT_TICKS = 100;
+
+    /**
+     * Minimum client ticks between two cycle requests.
+     *
+     * <p>Offer-update acknowledgement replaced the old fixed "click delay", but an
+     * acknowledgement arrives within the same tick on a local/low-latency server, so without a
+     * floor the loop sends thousands of requests per second and burns the whole
+     * {@link #MAX_CYCLES_SAFETY} budget in well under a second. Same defect and same fix as the
+     * NeoForge 26.3 port: kept at the previous default click delay.
+     */
+    private static final int MIN_CYCLE_DELAY_TICKS = 2;
 
     private static boolean initialized = false;
     private static boolean tradeCyclingLoaded = false;
@@ -246,6 +258,7 @@ public class AutomationManager {
             this.sendMessageToPlayer(Component.literal("Auto-cycling started. Press button again to stop."));
             this.waitingForOfferUpdate = false;
             this.waitingForOfferTicks = 0;
+            this.cycleCooldownTicks = 0;
             this.currentCycles = 0;
             this.lastMatchedFilter = null;
             evaluateAndMaybeCycle((MerchantScreen) currentScreen);
@@ -271,8 +284,16 @@ public class AutomationManager {
         if (waitingForOfferUpdate) {
             waitingForOfferTicks++;
             if (waitingForOfferTicks >= OFFER_UPDATE_TIMEOUT_TICKS) {
-                this.sendMessageToPlayer(Component.literal("§cTimed out waiting for updated villager trades."));
-                EasyAutoCyclerMod.LOGGER.warn("No merchant-offers acknowledgement received after {} ticks", OFFER_UPDATE_TIMEOUT_TICKS);
+                // The cycle request was accepted client-side (canCycle passed and the packet was
+                // sent) but the server never answered. Trade Cycling drops the request silently
+                // when the villager has no claimed workstation, so name that.
+                this.sendMessageToPlayer(Component.literal("§cTimed out waiting for updated villager trades. Does the villager have a claimed workstation?"));
+                EasyAutoCyclerMod.LOGGER.warn(
+                        "No merchant-offers acknowledgement received after {} ticks (cycles attempted: {})",
+                        OFFER_UPDATE_TIMEOUT_TICKS, currentCycles);
+                EasyAutoCyclerMod.LOGGER.warn(
+                        "The trading mod accepted the request but sent no offer update. Most likely causes: "
+                                + "the villager has not claimed a workstation, or no trading mod is installed on the server.");
                 stop("Merchant offers update timed out");
             }
             return;
@@ -292,11 +313,20 @@ public class AutomationManager {
 
         waitingForOfferUpdate = false;
         waitingForOfferTicks = 0;
+        // DEBUG, not TRACE: this line is the only direct evidence that a real cycle round-trip
+        // completed, and the dev run configs filter TRACE out of the console log.
+        EasyAutoCyclerMod.LOGGER.debug("Received merchant-offers acknowledgement for cycle {}", currentCycles);
+        this.cycleCooldownTicks = MIN_CYCLE_DELAY_TICKS;
         evaluateAndMaybeCycle(screen);
     }
 
     private void evaluateAndMaybeCycle(MerchantScreen screen) {
         if (!isRunning.get() || waitingForOfferUpdate) return;
+
+        if (cycleCooldownTicks > 0) {
+            cycleCooldownTicks--;
+            return;
+        }
 
         MerchantOffers offers = screen.getMenu().getOffers();
 

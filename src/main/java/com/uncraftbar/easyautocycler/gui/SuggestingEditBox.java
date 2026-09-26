@@ -153,7 +153,9 @@ public class SuggestingEditBox extends EditBox {
      * rectangle and therefore is not reached by newer Screen event routing.
      */
     public boolean clickSuggestion(MouseButtonEvent event) {
-        if (event.button() == 0 && isFocused() && dropdownHeight > 0
+        // 26.3 uses SDL input codes: left mouse is 1, not GLFW's 0.
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT && isFocused()
+                && !matches.isEmpty() && dropdownHeight > 0
                 && event.x() >= dropdownX && event.x() < dropdownX + dropdownWidth
                 && event.y() >= dropdownY && event.y() < dropdownY + dropdownHeight) {
             int index = ((int) event.y() - dropdownY - 1) / SUGGESTION_ROW_HEIGHT;

@@ -6,15 +6,29 @@ on:
       version:
         description: Version to publish
         required: true
-        default: 3.1.1
+        default: 3.1.2
         type: string
       target:
         description: Release set to build and publish
         required: true
-        default: fabric-1.20.1
+        default: release-3.1.2
         type: choice
         options:
+          - release-3.1.2
+          - keybinding-fixes
+          - '26.3'
           - fabric-1.20.1
+          - forge-1.20.1
+          - fabric-1.21.1
+          - neoforge-1.21.1
+          - fabric-1.21.11
+          - neoforge-1.21.11
+          - fabric-26.1.2
+          - neoforge-26.1.2
+          - fabric-26.2
+          - neoforge-26.2
+          - fabric-26.3
+          - neoforge-26.3
           - all
       publish:
         description: Upload to Modrinth, CurseForge, and GitHub Releases (disabled means dry run)
@@ -39,19 +53,58 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  plan:
+    name: Select release targets
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      count: ${{ steps.plan.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve selected branches to immutable commits
+        id: plan
+        env:
+          RELEASE_TARGET: ${{ inputs.target }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          from pathlib import Path
+          version = os.environ['RELEASE_VERSION']
+          if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version):
+              raise SystemExit('Expected a stable semantic version')
+          config = json.loads(Path('release/targets.json').read_text())
+          target = os.environ['RELEASE_TARGET']
+          if target.startswith('release-') and target != 'release-' + version:
+              raise SystemExit('Release set does not match requested version')
+          selected = config['sets'].get(target, [target])
+          rows = [dict(row) for row in config['targets'] if target == 'all' or row['branch'] in selected]
+          if not rows or (target != 'all' and len(rows) != len(selected)):
+              raise SystemExit('Unknown release target')
+          for row in rows:
+              row['archive'] = 'easyautocycler-' + row['branch']
+              row['sha'] = subprocess.check_output(['gh', 'api', f"repos/{os.environ['GITHUB_REPOSITORY']}/commits/{row['branch']}", '--jq', '.sha'], text=True).strip()
+          print(json.dumps(rows, indent=2))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write('matrix=' + json.dumps(rows, separators=(',', ':')) + '\n')
+              out.write(f'count={len(rows)}\n')
+          PY
+
   build:
     name: Build ${{ matrix.branch }}
+    needs: plan
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.target == 'fabric-1.20.1' && '[{"branch":"fabric-1.20.1","java":17,"archive":"easyautocycler-fabric-1.20.1"}]' || '[{"branch":"fabric-1.20.1","java":17,"archive":"easyautocycler-fabric-1.20.1"},{"branch":"forge-1.20.1","java":17,"archive":"easyautocycler-forge-1.20.1"},{"branch":"fabric-1.21.1","java":21,"archive":"easyautocycler-fabric-1.21.1"},{"branch":"neoforge-1.21.1","java":21,"archive":"easyautocycler-neoforge-1.21.1"},{"branch":"fabric-1.21.11","java":21,"archive":"easyautocycler-fabric-1.21.11"},{"branch":"neoforge-1.21.11","java":21,"archive":"easyautocycler-neoforge-1.21.11"},{"branch":"fabric-26.1.2","java":25,"archive":"easyautocycler-fabric-26.1.2"},{"branch":"neoforge-26.1.2","java":25,"archive":"easyautocycler-neoforge-26.1.2"},{"branch":"fabric-26.2","java":25,"archive":"easyautocycler-fabric-26.2"},{"branch":"neoforge-26.2","java":25,"archive":"easyautocycler-neoforge-26.2"}]') }}
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
 
     steps:
       - name: Checkout ${{ matrix.branch }}
         uses: actions/checkout@v4
         with:
-          ref: ${{ matrix.branch }}
+          ref: ${{ matrix.sha }}
 
       - name: Set up Java ${{ matrix.java }}
         uses: actions/setup-java@v4
@@ -91,14 +144,14 @@ jobs:
 
   publish:
     name: ${{ inputs.publish && 'Publish' || 'Dry run' }} ${{ inputs.version }} (${{ inputs.target }})
-    needs: build
+    needs: [plan, build]
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout release configuration
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
 
       - name: Download release jars
         uses: actions/download-artifact@v4
@@ -112,8 +165,7 @@ jobs:
         run: |
           find release/artifacts -maxdepth 1 -type f -name '*.jar' -print | sort
           count="$(find release/artifacts -maxdepth 1 -type f -name '*.jar' | wc -l)"
-          expected=10
-          if [[ "${{ inputs.target }}" != "all" ]]; then expected=1; fi
+          expected="${{ needs.plan.outputs.count }}"
           test "$count" -eq "$expected"
 
       - name: Set up Java 21

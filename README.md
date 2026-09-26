@@ -21,6 +21,8 @@ A powerful client-side Minecraft mod that automates villager trade cycling. Set 
 
 | Branch | Loader | MC Version | Supported Mods |
 |--------|--------|------------|----------------|
+| [`neoforge-26.3`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.3) | NeoForge | 26.3 | Easy Villagers, Trade Cycling |
+| [`fabric-26.3`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-26.3) | Fabric | 26.3 | Trade Cycling |
 | [`neoforge-26.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.2) | NeoForge | 26.2 | Easy Villagers, Trade Cycling |
 | [`fabric-26.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-26.2) | Fabric | 26.2 | Trade Cycling |
 | [`neoforge-26.1.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.1.2) | NeoForge | 26.1.2 | Easy Villagers, Trade Cycling |
@@ -48,4 +50,4 @@ See each branch's README for version-specific details.
 
 ## Publishing releases
 
-The manually triggered **Publish release** GitHub Actions workflow builds every supported branch and publishes matching releases to Modrinth and CurseForge. It defaults to a safe dry run; see [`release/README.md`](release/README.md) for token setup and the release process.
+The manually triggered **Publish release** GitHub Actions workflow builds a selected release set and publishes it to Modrinth, CurseForge, and GitHub Releases. It defaults to a safe dry run of the eight changed/new 3.1.2 targets, not unchanged branches; see [`release/README.md`](release/README.md) for the release process.

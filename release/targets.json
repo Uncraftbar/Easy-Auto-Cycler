@@ -1,0 +1,21 @@
+{
+  "targets": [
+    {"branch":"fabric-1.20.1","loader":"fabric","minecraft":"1.20.1","java":17},
+    {"branch":"forge-1.20.1","loader":"forge","minecraft":"1.20.1","java":17},
+    {"branch":"fabric-1.21.1","loader":"fabric","minecraft":"1.21.1","java":21},
+    {"branch":"neoforge-1.21.1","loader":"neoforge","minecraft":"1.21.1","java":21},
+    {"branch":"fabric-1.21.11","loader":"fabric","minecraft":"1.21.11","java":21},
+    {"branch":"neoforge-1.21.11","loader":"neoforge","minecraft":"1.21.11","java":21},
+    {"branch":"fabric-26.1.2","loader":"fabric","minecraft":"26.1.2","java":25},
+    {"branch":"neoforge-26.1.2","loader":"neoforge","minecraft":"26.1.2","java":25},
+    {"branch":"fabric-26.2","loader":"fabric","minecraft":"26.2","java":25},
+    {"branch":"neoforge-26.2","loader":"neoforge","minecraft":"26.2","java":25},
+    {"branch":"fabric-26.3","loader":"fabric","minecraft":"26.3","java":25},
+    {"branch":"neoforge-26.3","loader":"neoforge","minecraft":"26.3","java":25}
+  ],
+  "sets": {
+    "release-3.1.2": ["fabric-1.21.11","neoforge-1.21.11","fabric-26.1.2","neoforge-26.1.2","fabric-26.2","neoforge-26.2","fabric-26.3","neoforge-26.3"],
+    "keybinding-fixes": ["fabric-1.21.11","neoforge-1.21.11","fabric-26.1.2","neoforge-26.1.2","fabric-26.2","neoforge-26.2"],
+    "26.3": ["fabric-26.3","neoforge-26.3"]
+  }
+}

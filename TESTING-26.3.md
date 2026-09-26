@@ -35,9 +35,10 @@ which path is being exercised.
 
 ### Important: the villager must have a **claimed workstation**
 
-Both integration mods **silently** drop a cycle request when the villager has no claimed job-site
+Trade Cycling **silently** drops a cycle request when the villager has no claimed job-site
 block: no log line, no packet. A `/summon`ed villager with `NoAI:1` has an empty
-`Brain.memories`, so cycling will just time out. This is upstream behaviour, not a mod defect.
+`Brain.memories`, so cycling with Trade Cycling will just time out. This is upstream
+behaviour, not a mod defect. A naturally employed villager should already have a job site.
 
 Fix it in-game (creative + cheats):
 
@@ -102,10 +103,8 @@ If you instead see `Timed out waiting for updated villager trades`, check the wo
 
 ## Known caveats (read before judging a result)
 
-- **Easy Villagers false positive (open).** Easy Villagers re-sends an *identical* offer set when
-  the villager has a single possible trade outcome. The filter is then evaluated on that unchanged
-  list, so a matching trade can be reported as "found" even though nothing was re-rolled. Trade
-  Cycling does not show this. See PORT-STATUS.md.
+- Easy Villagers completed 264 acknowledged no-match cycles after the matched-filter reporting
+  fix. The matching-offer-at-start path has not yet had a post-fix client click-through.
 - Rendering was only ever checked on llvmpipe (software GL). A real-GPU visual pass is still open.
 - `Failed to open OpenAL device` and the `minecraft:end_of_frame` post-effect warning in headless
   runs are environmental, not mod defects.

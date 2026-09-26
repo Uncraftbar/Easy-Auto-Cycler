@@ -1,4 +1,14 @@
-# Fabric 26.3 local port — 2026-09-15
+# Fabric 26.3 — release 3.1.2
+
+## Release sign-off (2026-09-26)
+
+The maintainer tested the three desktop integration clients, confirmed cycling,
+reported autocomplete issues, and approved publication after testing the corrected
+clients. The release identifier is now `3.1.2`; the local-only restriction is lifted.
+The notes below are historical development evidence, not current release gates.
+The autocomplete fixes additionally have eight passing regression tests per loader.
+
+## Historical development log (started 2026-09-15)
 
 Target: **Minecraft 26.3 release**, published by Mojang at 11:23:02Z today.
 Not 26.2, not a prerelease. Base origin/fabric-26.2 `08d3ac1` plus pending

@@ -226,44 +226,76 @@ grindstone at `1,-61,4` sits beside the player.
 
    No trade changed, yet a match was reported.
 
-### Root cause: Easy Villagers acknowledges once per stack
+### Root cause (corrected): a null dereference at start, not an Easy Villagers reroll bug
 
-Decompiled `easy-villagers-neoforge-1.1.43+26.3.jar` (Vineflower 1.11.1) and compared it with
-Trade Cycling's handler:
+A first pass blamed an Easy Villagers "acknowledges once per stack" reroll quirk. **That was
+wrong** and the log disproves it: the run recorded **0 acknowledgement lines and 0 timeouts**. The
+match was reported **before any cycle request was sent**:
 
-- `de.maxhenkel.easyvillagers.events.TradeCycleEvents.onCycleTrades` only requires
-  `container.getTraderXp() <= 0 || container.tradeContainer.getActiveOffer() == null`, then
-  re-sends `player.sendMerchantOffers(...)` **with the current offers**. It has **no workstation
-  check** and does **not reroll** — it clears `specialPriceDiff`/reputation discount and re-sends.
-- Trade Cycling's `TradeCyclingMod.onCycleTrades` additionally requires a non-empty
-  `MemoryModuleType.JOB_SITE`, calls `VisibleTraders.regenerateTrades(...)`/`requestOffers(...)`
-  and always changes `specialPriceDiff`.
+```
+--- Toggle Key Pressed (MerchantScreen)! ---
+Starting network-synchronized villager trade cycling.
+Auto-cycling started. Press button again to stop.
+Target trade FOUND using filter!
+Target trade found: bell  •  ≤64 emeralds
+Stopping villager trade cycling. Reason: Target trade found with filter
+```
 
-So for a weaponsmith with two trade slots, **slot 0 contains a valid trade in both lists**. The
-mod evaluates the filter in the packet handler:
+`AutomationManager.start()` calls `evaluateAndMaybeCycle(...)` immediately, which evaluates the
+**current** offers and stops. On that path `lastMatchedFilter` had never been set, because
+`checkTradesWithFilters` only assigns it when `matchAny` is true:
 
-`handleMerchantOffers` → mixin tail → `onMerchantOffersUpdated` → `evaluateAndMaybeCycle` →
-`checkTradeWithFilter` → `priceMatches` (`costB` = 36 emeralds ≤ 64) → item id `minecraft:bell`
-matches.
+```java
+if (matchAny) { ... this.lastMatchedFilter = filter; return true; }
+else { ... this.lastMatchedFilter = enabledFilters.get(0); return true; }
+```
 
-This also explains the earlier "3000 acknowledgements in ~0.4 s" observation: an identical
-acknowledgement arrives in the same tick, so the loop churns.
+...but the caller built the chat message **before** calling it:
 
-The timeout warning added in the previous round ("Does the villager have a claimed workstation?")
-is also **misleading for Easy Villagers**, which does not perform that check — only Trade Cycling
-does.
+```java
+} else if (enabledFilters.isEmpty()) {                       // AND mode reaches here
+    if (checkTradesForEnchantment(...)) { ... }              // does not set lastMatchedFilter
+    else if (checkTradesForItem(...)) { ... }                // does not set lastMatchedFilter
+}
+```
 
-### Status
+With `matchAny = false` the enchantment/item branch returns `true` while `lastMatchedFilter` is
+still `null`, and `lastMatchedFilter.getDisplayName()` throws on the render thread. The mod treats
+`merchant_offers` as missing `runOnNextTick` if it crashed there; either way the client dies
+silently — no crash report, no FATAL line, just a frozen window. That is exactly what run 1 showed.
 
-**Not fixed.** The change needed is a confirmation step in `AutomationManager` (a match on
-unchanged offers must not count until the request is confirmed), which needs a fresh build plus
-re-test on **both** integration paths. Recording the finding now rather than shipping an
-unverified fix. Consequences to weigh when fixing:
+Two defects were therefore fixed:
 
-- Easy Villagers acknowledgements must still re-evaluate the filter on an identical offer list
-  (its "reroll" for a single-outcome villager is the second identical acknowledgement).
-- The "found" report should name the trade slot it matched.
-- The timeout text should be integration-specific.
+1. **Null dereference.** `checkFiltersAndReport(...)` now reads `lastMatchedFilter` into a local
+   only *after* the check returns true, and falls back to a literal label if it is still null, so
+   a reporting path cannot throw.
+2. **Wasted reroll on an already-matching trade.** `start()` now evaluates the current offers
+   *before* sending any cycle request. A trade that already satisfies the filter is reported as-is;
+   cycling it would destroy the very trade the player pressed the key to keep.
+
+`evaluateAndMaybeCycle` and `start()` now share the one `checkFiltersAndReport` path so the two
+cannot drift apart again.
+
+### Status — fixed in source; Easy Villagers re-verification incomplete
+
+Committed in `AutomationManager`. Re-tested on the Easy Villagers path after the fix:
+
+| Check | Result |
+|---|---|
+| No-match filter (`diamond` x64, ≤1 emerald) | **264 acknowledgements, 0 false finds**, ~2 ticks/cycle |
+| Compile + startup after fix | clean; Easy Villagers support enabled |
+| Match filter (`bell`, ≤64 emeralds) end to end | **not re-confirmed** — the automated `R` press landed after the run was torn down |
+
+The crash path is fixed (the throwing expression is gone and no-match cycling is clean), but the
+specific "trade already matches when `R` is pressed" outcome still needs one manual click-through.
+Do not read this as a full Easy Villagers sign-off.
+
+Still open, unrelated to the null dereference:
+
+- The timeout message names a missing workstation, a check only Trade Cycling performs. Make it
+  integration-specific.
+- The "found" report does not say which trade slot matched.
+- No real-GPU visual pass yet.
 
 ### Evidence
 
@@ -271,4 +303,6 @@ unverified fix. Consequences to weigh when fixing:
 |---|---|
 | `../neoforge-26.3-easyvillagers-e2e-run1.log` | full run: mod detection, toggle, match report, both `/data get` dumps |
 | `../neoforge-26.3-easyvillagers-e2e-run1-keylines.txt` | key lines extracted |
+| `../neoforge-26.3-easyvillagers-e2e-run2-nomatch-pacing.log` | post-fix: 264 acks, no false find, ~2 ticks/cycle |
+| `runs/client-easy-villagers/crash-reports/crash-2026-09-26_02.28.28-client.txt` | environmental SDL failure (no display), no mod frames — not a mod defect |
 | `../_evidence-26.3/2026-09-26_02.18.45.png` | in-game F2 screenshot of the trade screen after `R` |

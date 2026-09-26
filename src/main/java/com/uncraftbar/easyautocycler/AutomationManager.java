@@ -304,13 +304,21 @@ public class AutomationManager {
         }
 
         if (isRunning.compareAndSet(false, true)) {
-            EasyAutoCyclerMod.LOGGER.debug("Starting network-synchronized villager trade cycling.");
-            this.sendMessageToPlayer(Component.literal("Auto-cycling started. Press button again to stop."));
             this.waitingForOfferUpdate = false;
             this.waitingForOfferTicks = 0;
             this.cycleCooldownTicks = 0;
             this.currentCycles = 0;
             this.lastMatchedFilter = null;
+
+            // Evaluate the CURRENT offers before spending a cycle. A trade that already satisfies
+            // the filter must be reported as-is, never rerolled away: cycling it would destroy the
+            // very trade the player pressed the key to keep.
+            if (checkFiltersAndReport((MerchantScreen) currentScreen)) {
+                return;
+            }
+
+            EasyAutoCyclerMod.LOGGER.debug("Starting network-synchronized villager trade cycling.");
+            this.sendMessageToPlayer(Component.literal("Auto-cycling started. Press button again to stop."));
             evaluateAndMaybeCycle((MerchantScreen) currentScreen);
         }
     }
@@ -400,37 +408,7 @@ public class AutomationManager {
             return;
         }
 
-        MerchantOffers offers = screen.getMenu().getOffers();
-
-        List<FilterEntry> enabledFilters = filterEntries.stream()
-                .filter(FilterEntry::isEnabled)
-                .collect(Collectors.toList());
-
-        if (!enabledFilters.isEmpty() && checkTradesWithFilters(offers)) {
-            Component message = Component.empty()
-                    .append(Component.literal("§aTarget trade found: "))
-                    .append(this.lastMatchedFilter.getDisplayName());
-
-            EasyAutoCyclerMod.LOGGER.debug("Target trade FOUND using filter!");
-            this.sendMessageToPlayer(message);
-            playSuccessSound();
-            stop("Target trade found with filter");
-            return;
-        } else if (enabledFilters.isEmpty()) {
-            if (cycleMode == MODE_ENCHANTMENT && targetEnchantmentId != null && checkTradesForEnchantment(offers)) {
-                EasyAutoCyclerMod.LOGGER.debug("Target trade FOUND!");
-                this.sendMessageToPlayer(Component.literal("§aTarget trade found!"));
-                playSuccessSound();
-                stop("Target trade found");
-                return;
-            } else if (cycleMode == MODE_ITEM && targetItemId != null && checkTradesForItem(offers)) {
-                EasyAutoCyclerMod.LOGGER.debug("Target item trade FOUND!");
-                this.sendMessageToPlayer(Component.literal("§aTarget item trade found!"));
-                playSuccessSound();
-                stop("Target item trade found");
-                return;
-            }
-        }
+        if (checkFiltersAndReport(screen)) return;
 
         if (canCycle(screen.getMenu())) {
             if (currentCycles >= MAX_CYCLES_SAFETY) {
@@ -464,6 +442,59 @@ public class AutomationManager {
                 stop("Network error");
             }
         }
+    }
+
+    /**
+     * Evaluates the offers currently held by the menu against the configured filters.
+     *
+     * <p>Called both before the first cycle request and after each acknowledgement, so the two
+     * paths cannot drift apart.
+     *
+     * @return {@code true} when a match was reported and cycling was stopped
+     */
+    private boolean checkFiltersAndReport(MerchantScreen screen) {
+        MerchantOffers offers = screen.getMenu().getOffers();
+
+        List<FilterEntry> enabledFilters = filterEntries.stream()
+                .filter(FilterEntry::isEnabled)
+                .collect(Collectors.toList());
+
+        if (!enabledFilters.isEmpty()) {
+            if (!checkTradesWithFilters(offers)) {
+                return false;
+            }
+            // lastMatchedFilter is set by checkTradesWithFilters; stay null-safe regardless so a
+            // reporting path can never throw (an exception here aborts the client tick and leaves
+            // the automation stuck in its running state).
+            FilterEntry matched = this.lastMatchedFilter;
+            Component message = Component.empty()
+                    .append(Component.literal("§aTarget trade found: "))
+                    .append(matched != null ? matched.getDisplayName() : Component.literal("configured filter"));
+
+            EasyAutoCyclerMod.LOGGER.debug("Target trade FOUND using filter!");
+            this.sendMessageToPlayer(message);
+            playSuccessSound();
+            stop("Target trade found with filter");
+            return true;
+        }
+
+        if (cycleMode == MODE_ENCHANTMENT && targetEnchantmentId != null && checkTradesForEnchantment(offers)) {
+            EasyAutoCyclerMod.LOGGER.debug("Target trade FOUND!");
+            this.sendMessageToPlayer(Component.literal("§aTarget trade found!"));
+            playSuccessSound();
+            stop("Target trade found");
+            return true;
+        }
+
+        if (cycleMode == MODE_ITEM && targetItemId != null && checkTradesForItem(offers)) {
+            EasyAutoCyclerMod.LOGGER.debug("Target item trade FOUND!");
+            this.sendMessageToPlayer(Component.literal("§aTarget item trade found!"));
+            playSuccessSound();
+            stop("Target item trade found");
+            return true;
+        }
+
+        return false;
     }
 
     private boolean checkTradesForEnchantment(MerchantOffers offers) {

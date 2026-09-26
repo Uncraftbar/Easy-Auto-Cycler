@@ -1,8 +1,8 @@
 # Easy Auto Cycler
 
-> Local NeoForge 26.3 branch: builds, launches a dev client, and the end-to-end
-> cycle round-trip plus find-and-stop are verified locally. Dedicated servers now
-> start cleanly. Nothing is published. See [PORT-STATUS.md](PORT-STATUS.md).
+> Minecraft 26.3 / NeoForge — version 3.1.2. Cycling and the corrected autocomplete
+> were tested in game by the maintainer. See [PORT-STATUS.md](PORT-STATUS.md) for
+> the development history and automated validation details.
 
 [![CurseForge Downloads](https://cf.way2muchnoise.eu/full_1242344_downloads.svg?badge)](https://curseforge.com/minecraft/mc-mods/easy-auto-cycler)
 [![Modrinth](https://img.shields.io/badge/dynamic/json?labelColor=black&color=grey&label=&suffix=%20downloads&query=downloads&url=https://api.modrinth.com/v2/project/easy-auto-cycler&style=flat&logo=modrinth)](https://modrinth.com/mod/easy-auto-cycler)
@@ -56,6 +56,7 @@ A powerful client-side Minecraft mod that automates villager trade cycling. Set 
 | Branch | Loader | MC Version | Supported Mods |
 |--------|--------|------------|----------------|
 | **`neoforge-26.3`** | **NeoForge** | **26.3** | **Easy Villagers, Trade Cycling** |
+| [`fabric-26.3`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-26.3) | Fabric | 26.3 | Trade Cycling |
 | [`neoforge-26.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-26.2) | NeoForge | 26.2 | Easy Villagers, Trade Cycling |
 | [`fabric-26.2`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/fabric-26.2) | Fabric | 26.2 | Trade Cycling |
 | [`neoforge-1.21.1`](https://github.com/Uncraftbar/Easy-Auto-Cycler/tree/neoforge-1.21.1) | NeoForge | 1.21.1 | Easy Villagers, Trade Cycling |

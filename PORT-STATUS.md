@@ -1,4 +1,15 @@
-# NeoForge 26.3 — ported, client-tested, not published
+# NeoForge 26.3 — release 3.1.2
+
+## Release sign-off (2026-09-26)
+
+The maintainer tested the NeoForge + Easy Villagers, NeoForge + Trade Cycling,
+and Fabric + Trade Cycling desktop clients, confirmed cycling, reported the
+autocomplete issues, and approved publication after testing the corrected clients.
+The release identifier is now `3.1.2`; the local-only restriction is lifted.
+The notes below are historical development evidence, not current release gates.
+The autocomplete fixes additionally have eight passing regression tests per loader.
+
+## Historical development log
 
 Local-only preparation. No push, tag, release workflow or publisher task was run.
 Version `3.1.2-local.26.3` is a local candidate identifier, not an approved release.

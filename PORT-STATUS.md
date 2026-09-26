@@ -193,3 +193,82 @@ filter) also ran before it, and Run C (pacing) ran after.
 - `runs/client-trade-cycling/ops.json` was added locally as an op fallback; it did not take
   effect because `isOp` is gated on `isSingleplayerOwner`, so the `level.dat` patch above is
   what actually enabled commands.
+
+## Follow-up 2026-09-26 — Easy Villagers path tested end to end; real defect found
+
+The earlier cycling evidence came only from the **Trade Cycling** path. Easy Villagers uses a
+different server handler (see below), so it was exercised separately.
+
+### Setup
+
+Dev client on a private headless display `:98` (llvmpipe), Easy Villagers `1.1.43+26.3` as the only
+integration (`-PruntimeEasyVillagers`), game dir `runs/client-easy-villagers/`, reusing the
+`cycworld` test world. A `/summon`ed weaponsmith with `Brain.memories."minecraft:job_site"` set to a
+grindstone at `1,-61,4` sits beside the player.
+
+### What was exercised
+
+1. `R` in the open trade screen: `--- Toggle Key Pressed (MerchantScreen)! ---`, then
+   `Auto-cycling started. Press button again to stop.`
+2. The filter `bell • ≤64 emeralds` immediately reported
+   `Target trade found: bell  •  ≤64 emeralds` and stopped.
+3. `/data get entity @e[type=minecraft:villager,limit=1,sort=nearest] Offers` **before** starting
+   and again **after** the run returned byte-identical data:
+
+   ```
+   {Recipes: [{maxUses: 12, buy: {count: 4, id: "minecraft:iron_ingot"},
+               sell: {count: 1, id: "minecraft:emerald"}, xp: 10,
+               specialPrice: 10, priceMultiplier: 0.05f},
+              {maxUses: 12, buy: {count: 36, id: "minecraft:emerald"},
+               sell: {count: 1, id: "minecraft:bell"}, xp: 5,
+               specialPrice: 40, priceMultiplier: 0.2f}]}
+   ```
+
+   No trade changed, yet a match was reported.
+
+### Root cause: Easy Villagers acknowledges once per stack
+
+Decompiled `easy-villagers-neoforge-1.1.43+26.3.jar` (Vineflower 1.11.1) and compared it with
+Trade Cycling's handler:
+
+- `de.maxhenkel.easyvillagers.events.TradeCycleEvents.onCycleTrades` only requires
+  `container.getTraderXp() <= 0 || container.tradeContainer.getActiveOffer() == null`, then
+  re-sends `player.sendMerchantOffers(...)` **with the current offers**. It has **no workstation
+  check** and does **not reroll** — it clears `specialPriceDiff`/reputation discount and re-sends.
+- Trade Cycling's `TradeCyclingMod.onCycleTrades` additionally requires a non-empty
+  `MemoryModuleType.JOB_SITE`, calls `VisibleTraders.regenerateTrades(...)`/`requestOffers(...)`
+  and always changes `specialPriceDiff`.
+
+So for a weaponsmith with two trade slots, **slot 0 contains a valid trade in both lists**. The
+mod evaluates the filter in the packet handler:
+
+`handleMerchantOffers` → mixin tail → `onMerchantOffersUpdated` → `evaluateAndMaybeCycle` →
+`checkTradeWithFilter` → `priceMatches` (`costB` = 36 emeralds ≤ 64) → item id `minecraft:bell`
+matches.
+
+This also explains the earlier "3000 acknowledgements in ~0.4 s" observation: an identical
+acknowledgement arrives in the same tick, so the loop churns.
+
+The timeout warning added in the previous round ("Does the villager have a claimed workstation?")
+is also **misleading for Easy Villagers**, which does not perform that check — only Trade Cycling
+does.
+
+### Status
+
+**Not fixed.** The change needed is a confirmation step in `AutomationManager` (a match on
+unchanged offers must not count until the request is confirmed), which needs a fresh build plus
+re-test on **both** integration paths. Recording the finding now rather than shipping an
+unverified fix. Consequences to weigh when fixing:
+
+- Easy Villagers acknowledgements must still re-evaluate the filter on an identical offer list
+  (its "reroll" for a single-outcome villager is the second identical acknowledgement).
+- The "found" report should name the trade slot it matched.
+- The timeout text should be integration-specific.
+
+### Evidence
+
+| File | Content |
+|---|---|
+| `../neoforge-26.3-easyvillagers-e2e-run1.log` | full run: mod detection, toggle, match report, both `/data get` dumps |
+| `../neoforge-26.3-easyvillagers-e2e-run1-keylines.txt` | key lines extracted |
+| `../_evidence-26.3/2026-09-26_02.18.45.png` | in-game F2 screenshot of the trade screen after `R` |
